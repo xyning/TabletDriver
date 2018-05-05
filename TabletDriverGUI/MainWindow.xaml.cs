@@ -174,6 +174,9 @@ namespace TabletDriverGUI
                 comboBoxButton2.Items.Add("Mouse " + i);
                 comboBoxButton3.Items.Add("Mouse " + i);
             }
+            comboBoxButton1.Items.Add("Mouse Wheel");
+            comboBoxButton2.Items.Add("Mouse Wheel");
+            comboBoxButton3.Items.Add("Mouse Wheel");
             comboBoxButton1.Items.Add("Disable Tablet");
             comboBoxButton2.Items.Add("Disable Tablet");
             comboBoxButton3.Items.Add("Disable Tablet");
@@ -466,9 +469,15 @@ namespace TabletDriverGUI
             //
             if (config.ButtonMap.Count() == 3)
             {
-                comboBoxButton1.SelectedIndex = config.ButtonMap[0];
-                comboBoxButton2.SelectedIndex = config.ButtonMap[1];
-                comboBoxButton3.SelectedIndex = config.ButtonMap[2];
+                int b1 = config.ButtonMap[0];
+                int b2 = config.ButtonMap[1];
+                int b3 = config.ButtonMap[2];
+                int c1 = comboBoxButton1.Items.Count;
+                int c2 = comboBoxButton2.Items.Count;
+                int c3 = comboBoxButton3.Items.Count;
+                comboBoxButton1.SelectedIndex = b1 == 8 ? c1 - 1 : (b1 == 7 ? c1 - 2 : b1);
+                comboBoxButton2.SelectedIndex = b2 == 8 ? c2 - 1 : (b2 == 7 ? c2 - 2 : b2);
+                comboBoxButton3.SelectedIndex = b3 == 8 ? c3 - 1 : (b3 == 7 ? c3 - 2 : b3);
             }
             else
             {
@@ -616,9 +625,15 @@ namespace TabletDriverGUI
 
 
             // Button map 
-            config.ButtonMap[0] = comboBoxButton1.SelectedIndex == comboBoxButton1.Items.Count - 1 ? 8 : comboBoxButton1.SelectedIndex;
-            config.ButtonMap[1] = comboBoxButton2.SelectedIndex == comboBoxButton2.Items.Count - 1 ? 8 : comboBoxButton2.SelectedIndex;
-            config.ButtonMap[2] = comboBoxButton3.SelectedIndex == comboBoxButton3.Items.Count - 1 ? 8 : comboBoxButton3.SelectedIndex;
+            int i1 = comboBoxButton1.SelectedIndex;
+            int i2 = comboBoxButton2.SelectedIndex;
+            int i3 = comboBoxButton3.SelectedIndex;
+            int c1 = comboBoxButton1.Items.Count;
+            int c2 = comboBoxButton2.Items.Count;
+            int c3 = comboBoxButton3.Items.Count;
+            config.ButtonMap[0] = (i1 == c1 - 1) ? 8 : ((i1 == c1 - 2) ? 7 : i1);
+            config.ButtonMap[1] = (i2 == c2 - 1) ? 8 : ((i2 == c2 - 2) ? 7 : i2);
+            config.ButtonMap[2] = (i3 == c3 - 1) ? 8 : ((i3 == c3 - 2) ? 7 : i3);
             config.DisableButtons = (bool)checkBoxDisableButtons.IsChecked;
 
 

@@ -12,6 +12,7 @@
 
 #define LOG_MODULE ""
 #define DISABLE_TABLET ((tablet->state.buttons & (1 << (8 - 1))) > 0)
+#define WHEEL_PRESSED ((tablet->state.buttons & (1 << (7 - 1))) > 0)
 #include "Logger.h"
 
 #pragma comment(lib, "hid.lib")
@@ -145,6 +146,13 @@ void RunTabletThread() {
 				filterTimedEnabled = true;
 		}
 
+		static Vector2D last;
+		if (WHEEL_PRESSED && ((tablet->state.buttons&(1 << 0)) > 0)) {
+			tablet->state.buttons &= ~(1 << 0);
+			double delta = last.y - tablet->state.position.y;
+			mouse_event(MOUSEEVENTF_WHEEL, 0, 0, -delta * 20, 0);
+		}
+		last = tablet->state.position;
 
 		// Do not write report when timed filter is enabled
 		if(tablet->filterTimedCount == 0 || !filterTimedEnabled) {
