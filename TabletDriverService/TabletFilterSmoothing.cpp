@@ -71,6 +71,7 @@ void TabletFilterSmoothing::Update() {
 double TabletFilterSmoothing::SetPosition(double x, double y) {
 	this->position.x = x;
 	this->position.y = y;
+	return 0;
 }
 
 

@@ -11,6 +11,7 @@
 #include "ProcessCommand.h"
 
 #define LOG_MODULE ""
+#define DISABLE_TABLET ((tablet->state.buttons & (1 << (8 - 1))) > 0)
 #include "Logger.h"
 
 #pragma comment(lib, "hid.lib")
@@ -148,37 +149,39 @@ void RunTabletThread() {
 		// Do not write report when timed filter is enabled
 		if(tablet->filterTimedCount == 0 || !filterTimedEnabled) {
 
-			// Relative mode
-			if(vmulti->mode == VMulti::ModeRelativeMouse) {
+			if (!DISABLE_TABLET) {
+				// Relative mode
+				if(vmulti->mode == VMulti::ModeRelativeMouse) {
 
-				x = tablet->state.position.x;
-				y = tablet->state.position.y;
+					x = tablet->state.position.x;
+					y = tablet->state.position.y;
 
-				// Map position to virtual screen (values between 0 and 1)
-				mapper->GetRotatedTabletPosition(&x, &y);
+					// Map position to virtual screen (values between 0 and 1)
+					mapper->GetRotatedTabletPosition(&x, &y);
 
-				// Create VMulti report
-				vmulti->CreateReport(tablet->state.buttons, x, y, tablet->state.pressure);
+					// Create VMulti report
+					vmulti->CreateReport(tablet->state.buttons, x, y, tablet->state.pressure);
 
-				// Write report to VMulti device
-				vmulti->WriteReport();
+					// Write report to VMulti device
+					vmulti->WriteReport();
 
 
 
-			// Absolute / Digitizer mode
-			} else {
-				// Get x & y from the tablet state
-				x = tablet->state.position.x;
-				y = tablet->state.position.y;
+				// Absolute / Digitizer mode
+				} else {
+					// Get x & y from the tablet state
+					x = tablet->state.position.x;
+					y = tablet->state.position.y;
 
-				// Map position to virtual screen (values betweeb 0->1)
-				mapper->GetScreenPosition(&x, &y);
+					// Map position to virtual screen (values betweeb 0->1)
+					mapper->GetScreenPosition(&x, &y);
 
-				// Create VMulti report
-				vmulti->CreateReport(tablet->state.buttons, x, y, tablet->state.pressure);
+					// Create VMulti report
+					vmulti->CreateReport(tablet->state.buttons, x, y, tablet->state.pressure);
 
-				// Write report to VMulti device
-				vmulti->WriteReport();
+					// Write report to VMulti device
+					vmulti->WriteReport();
+				}
 			}
 		}
 	}
@@ -215,60 +218,62 @@ VOID CALLBACK FilterTimerCallback(_In_ PVOID lpParameter, _In_ BOOLEAN TimerOrWa
 
 	}
 
+	if (!DISABLE_TABLET) {
 
-	//
-	// Relative mode
-	//
-	if(vmulti->mode == VMulti::ModeRelativeMouse) {
+		//
+		// Relative mode
+		//
+		if(vmulti->mode == VMulti::ModeRelativeMouse) {
 
-		// Map position to virtual screen (values between 0 and 1)
-		mapper->GetRotatedTabletPosition(&position.x, &position.y);
+			// Map position to virtual screen (values between 0 and 1)
+			mapper->GetRotatedTabletPosition(&position.x, &position.y);
 
-		// Create VMulti report
-		vmulti->CreateReport(
-			tablet->state.buttons,
-			position.x,
-			position.y,
-			tablet->state.pressure
-		);
+			// Create VMulti report
+			vmulti->CreateReport(
+				tablet->state.buttons,
+				position.x,
+				position.y,
+				tablet->state.pressure
+			);
 
-		// Write report to VMulti device if report has changed
-		if(vmulti->HasReportChanged()
-			||
-			vmulti->reportRelativeMouse.x != 0
-			||
-			vmulti->reportRelativeMouse.y != 0
-			) {
-			vmulti->WriteReport();
+			// Write report to VMulti device if report has changed
+			if(vmulti->HasReportChanged()
+				||
+				vmulti->reportRelativeMouse.x != 0
+				||
+				vmulti->reportRelativeMouse.y != 0
+				) {
+				vmulti->WriteReport();
+			}
+
+
 		}
 
-
-	}
-
-	//
-	// Absolute / Digitizer mode
-	//
-	else {
+		//
+		// Absolute / Digitizer mode
+		//
+		else {
 
 
-		// Map position to virtual screen (values betweeb 0->1)
-		mapper->GetScreenPosition(&position.x, &position.y);
+			// Map position to virtual screen (values betweeb 0->1)
+			mapper->GetScreenPosition(&position.x, &position.y);
 
-		// Create VMulti report
-		vmulti->CreateReport(
-			tablet->state.buttons,
-			position.x,
-			position.y,
-			tablet->state.pressure
-		);
+			// Create VMulti report
+			vmulti->CreateReport(
+				tablet->state.buttons,
+				position.x,
+				position.y,
+				tablet->state.pressure
+			);
 
 
-		// Write report to VMulti device
-		if(vmulti->HasReportChanged() && tablet->state.isValid) {
-			vmulti->WriteReport();
+			// Write report to VMulti device
+			if(vmulti->HasReportChanged() && tablet->state.isValid) {
+				vmulti->WriteReport();
+			}
 		}
-	}
 
+	}
 
 }
 

@@ -174,6 +174,9 @@ namespace TabletDriverGUI
                 comboBoxButton2.Items.Add("Mouse " + i);
                 comboBoxButton3.Items.Add("Mouse " + i);
             }
+            comboBoxButton1.Items.Add("Disable Tablet");
+            comboBoxButton2.Items.Add("Disable Tablet");
+            comboBoxButton3.Items.Add("Disable Tablet");
             comboBoxButton1.SelectedIndex = 0;
             comboBoxButton2.SelectedIndex = 0;
             comboBoxButton3.SelectedIndex = 0;
@@ -613,9 +616,9 @@ namespace TabletDriverGUI
 
 
             // Button map 
-            config.ButtonMap[0] = comboBoxButton1.SelectedIndex;
-            config.ButtonMap[1] = comboBoxButton2.SelectedIndex;
-            config.ButtonMap[2] = comboBoxButton3.SelectedIndex;
+            config.ButtonMap[0] = comboBoxButton1.SelectedIndex == comboBoxButton1.Items.Count - 1 ? 8 : comboBoxButton1.SelectedIndex;
+            config.ButtonMap[1] = comboBoxButton2.SelectedIndex == comboBoxButton2.Items.Count - 1 ? 8 : comboBoxButton2.SelectedIndex;
+            config.ButtonMap[2] = comboBoxButton3.SelectedIndex == comboBoxButton3.Items.Count - 1 ? 8 : comboBoxButton3.SelectedIndex;
             config.DisableButtons = (bool)checkBoxDisableButtons.IsChecked;
 
 
