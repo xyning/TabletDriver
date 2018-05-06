@@ -30,7 +30,7 @@ public:
 	};
 
 	enum ExtraButtons {
-		None, DisableTablet, MouseWheel
+		None, DisableTablet, MouseWheel, Keyboard
 	};
 
 	// Tablet packet state

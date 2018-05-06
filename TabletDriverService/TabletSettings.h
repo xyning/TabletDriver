@@ -14,7 +14,8 @@ public:
 	int maxX;
 	int maxY;
 	int maxPressure;
-	int mouseWheelSpeed;
+	int mouseWheelSpeed[3];
+	int keyboardKeyCodes[3][8];
 	int clickPressure;
 	int keepTipDown;
 	double width;

@@ -11,10 +11,14 @@
 #include "ProcessCommand.h"
 
 #define LOG_MODULE ""
-#define EXTRA_BUTTON_TIP ((tablet->state.buttons & (1 << (8 - 1))) > 0)
-#define EXTRA_BUTTON_BOTTOM ((tablet->state.buttons & (1 << (7 - 1))) > 0)
-#define EXTRA_BUTTON_TOP ((tablet->state.buttons & (1 << (6 - 1))) > 0)
-#define EXTRA_BUTTON_PRESSED(EVENT) ((EXTRA_BUTTON_TIP && (tablet->btn1 == EVENT)) || (EXTRA_BUTTON_BOTTOM && (tablet->btn2 == EVENT)) || (EXTRA_BUTTON_TOP && (tablet->btn3 == EVENT)))
+#define BUTTON_PRESSED(BINDEX) ((tablet->state.buttons&(1 << (BINDEX))) > 0)
+#define EXTRA_TIP_PRESSED (BUTTON_PRESSED(8-1))
+#define EXTRA_BOTTOM_PRESSED (BUTTON_PRESSED(7-1))
+#define EXTRA_TOP_PRESSED (BUTTON_PRESSED(6-1))
+#define EXTRA_TIP_EVENT_FIRED(EVENT) (EXTRA_TIP_PRESSED && (tablet->btn1 == EVENT))
+#define EXTRA_BOTTOM_EVENT_FIRED(EVENT) (EXTRA_BOTTOM_PRESSED && (tablet->btn2 == EVENT))
+#define EXTRA_TOP_EVENT_FIRED(EVENT) (EXTRA_TOP_PRESSED && (tablet->btn3 == EVENT))
+#define EXTRA_EVENT_FIRED(EVENT) (EXTRA_TIP_EVENT_FIRED(EVENT) || EXTRA_BOTTOM_EVENT_FIRED(EVENT) || EXTRA_TOP_EVENT_FIRED(EVENT))
 #include "Logger.h"
 
 #pragma comment(lib, "hid.lib")
@@ -150,17 +154,73 @@ void RunTabletThread() {
 
 		// Mouse Wheel Events
 		static Vector2D last;
-		if (EXTRA_BUTTON_PRESSED(Tablet::MouseWheel) && ((tablet->state.buttons&(1 << 0)) > 0)) {
+		if (EXTRA_TIP_EVENT_FIRED(Tablet::MouseWheel)) {
 			tablet->state.buttons &= ~(1 << 0);
 			double delta = last.y - tablet->state.position.y;
-			mouse_event(MOUSEEVENTF_WHEEL, 0, 0, -delta * (tablet->settings.mouseWheelSpeed), 0);
+			mouse_event(MOUSEEVENTF_WHEEL, 0, 0, -delta * (tablet->settings.mouseWheelSpeed[0]), 0);
+		}
+		if (EXTRA_BOTTOM_EVENT_FIRED(Tablet::MouseWheel) && BUTTON_PRESSED(0)) {
+			tablet->state.buttons &= ~(1 << 0);
+			double delta = last.y - tablet->state.position.y;
+			mouse_event(MOUSEEVENTF_WHEEL, 0, 0, -delta * (tablet->settings.mouseWheelSpeed[1]), 0);
+		}
+		if (EXTRA_TOP_EVENT_FIRED(Tablet::MouseWheel) && BUTTON_PRESSED(0)) {
+			tablet->state.buttons &= ~(1 << 0);
+			double delta = last.y - tablet->state.position.y;
+			mouse_event(MOUSEEVENTF_WHEEL, 0, 0, -delta * (tablet->settings.mouseWheelSpeed[2]), 0);
 		}
 		last = tablet->state.position;
+
+		// Keyboard Events
+		static bool key0Pressed, key1Pressed, key2Pressed;
+		if (EXTRA_TIP_EVENT_FIRED(Tablet::Keyboard) && (!key0Pressed)) {
+			for (int i = 0; i < 8; i++)
+			{
+				keybd_event(tablet->settings.keyboardKeyCodes[0][i], 0, 0, 0);
+			}
+			key0Pressed = true;
+		}
+		else if ((!EXTRA_TIP_EVENT_FIRED(Tablet::Keyboard)) && key0Pressed) {
+				for (int i = 0; i < 8; i++)
+				{
+					keybd_event(tablet->settings.keyboardKeyCodes[0][i], 0, KEYEVENTF_KEYUP, 0);
+				}
+				key0Pressed = false;
+			}
+		if (EXTRA_BOTTOM_EVENT_FIRED(Tablet::Keyboard) && (!key1Pressed)) {
+			for (int i = 0; i < 8; i++)
+			{
+				keybd_event(tablet->settings.keyboardKeyCodes[1][i], 0, 0, 0);
+			}
+			key1Pressed = true;
+		}
+		else if ((!EXTRA_BOTTOM_EVENT_FIRED(Tablet::Keyboard)) && key1Pressed) {
+				for (int i = 0; i < 8; i++)
+				{
+					keybd_event(tablet->settings.keyboardKeyCodes[1][i], 0, KEYEVENTF_KEYUP, 0);
+				}
+				key1Pressed = false;
+			}
+		if (EXTRA_TOP_EVENT_FIRED(Tablet::Keyboard) && (!key2Pressed)) {
+			for (int i = 0; i < 8; i++)
+			{
+				keybd_event(tablet->settings.keyboardKeyCodes[2][i], 0, 0, 0);
+			}
+			key2Pressed = true;
+		}
+		else if ((!EXTRA_TOP_EVENT_FIRED(Tablet::Keyboard)) && key2Pressed) {
+				for (int i = 0; i < 8; i++)
+				{
+					keybd_event(tablet->settings.keyboardKeyCodes[2][i], 0, KEYEVENTF_KEYUP, 0);
+				}
+				key2Pressed = false;
+			}
+		
 
 		// Do not write report when timed filter is enabled
 		if(tablet->filterTimedCount == 0 || !filterTimedEnabled) {
 
-			if (EXTRA_BUTTON_PRESSED(Tablet::DisableTablet)) {
+			if (EXTRA_EVENT_FIRED(Tablet::DisableTablet)) {
 				continue;
 			}
 			// Relative mode
@@ -230,7 +290,7 @@ VOID CALLBACK FilterTimerCallback(_In_ PVOID lpParameter, _In_ BOOLEAN TimerOrWa
 
 	}
 
-	if (EXTRA_BUTTON_PRESSED(Tablet::DisableTablet)) {
+	if (EXTRA_EVENT_FIRED(Tablet::DisableTablet)) {
 		return;
 	}
 

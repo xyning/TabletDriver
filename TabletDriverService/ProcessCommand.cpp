@@ -757,10 +757,26 @@ bool ProcessCommand(CommandLine *cmd) {
 			*btn = Tablet::DisableTablet;
 			LOG_INFO("DisableTabletEx: %d\n", index);
 		}
-		if (c == "mousewheel") { 
+		if (c == "mousewheel") {
 			*btn = Tablet::MouseWheel;
-			tablet->settings.mouseWheelSpeed = cmd->GetInt(2, 20);
-			LOG_INFO("MouseWheelEx: %d, Speed: %d\n", index, tablet->settings.mouseWheelSpeed);
+			tablet->settings.mouseWheelSpeed[index] = cmd->GetInt(2, 20);
+			LOG_INFO("MouseWheelEx: %d, Speed: %d\n", index, tablet->settings.mouseWheelSpeed[index]);
+		}
+		if (c == "keyboard") {
+			*btn = Tablet::Keyboard;
+			for (int i = 2; i <= 9; i++) {
+				tablet->settings.keyboardKeyCodes[index][i - 2] = cmd->GetInt(i, 0);
+			}
+			LOG_INFO("Keyboard: %d, Keys: %d, %d, %d, %d, %d, %d, %d, %d\n", index,
+				tablet->settings.keyboardKeyCodes[index][0],
+				tablet->settings.keyboardKeyCodes[index][1],
+				tablet->settings.keyboardKeyCodes[index][2],
+				tablet->settings.keyboardKeyCodes[index][3],
+				tablet->settings.keyboardKeyCodes[index][4],
+				tablet->settings.keyboardKeyCodes[index][5],
+				tablet->settings.keyboardKeyCodes[index][6],
+				tablet->settings.keyboardKeyCodes[index][7]
+			);
 		}
 	}
 

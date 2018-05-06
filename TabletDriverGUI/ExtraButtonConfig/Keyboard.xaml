@@ -1,0 +1,19 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TabletDriverGUI.ExtraButtonConfig"
+        xmlns:System="clr-namespace:System;assembly=mscorlib" x:Class="TabletDriverGUI.ExtraButtonConfig.Keyboard"
+        mc:Ignorable="d"
+        Title="Keyboard" Height="250" Width="400">
+    <Grid>
+        <ListBox x:Name="list" HorizontalAlignment="Left" Margin="10,10,0,10" Width="100" SelectionChanged="list_SelectionChanged"/>
+        <ComboBox x:Name="combo" Margin="115,10,9.6,0" VerticalAlignment="Top" SelectedIndex="0">
+            <System:String>Add a key...</System:String>
+        </ComboBox>
+        <Button x:Name="btnRemove" Content="Remove" HorizontalAlignment="Left" Margin="115,0,0,10" Width="75" IsEnabled="False" Height="19" VerticalAlignment="Bottom" Click="btnRemove_Click"/>
+        <Button x:Name="btnOk" Content="OK" HorizontalAlignment="Right" Margin="0,0,9.6,10" VerticalAlignment="Bottom" Width="75" Click="btnOk_Click"/>
+
+    </Grid>
+</Window>

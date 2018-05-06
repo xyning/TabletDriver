@@ -193,6 +193,9 @@ namespace TabletDriverGUI
             extraTipEventBox.Items.Add("Disable Tablet");
             extraBottomEventBox.Items.Add("Disable Tablet");
             extraTopEventBox.Items.Add("Disable Tablet");
+            extraTipEventBox.Items.Add("Keyboard");
+            extraBottomEventBox.Items.Add("Keyboard");
+            extraTopEventBox.Items.Add("Keyboard");
 
             //
             // Smoothing rate ComboBox
@@ -1262,7 +1265,15 @@ namespace TabletDriverGUI
                         break;
                     }
                 case Configuration.ExtraEvents.DisableTablet: { break; }
-                case Configuration.ExtraEvents.Keyboard: { break; }
+                case Configuration.ExtraEvents.Keyboard:
+                    {
+                        ExtraButtonConfig.Keyboard ex = new ExtraButtonConfig.Keyboard();
+                        ex.ShowDialog();
+                        string r = ex.Result;
+                        extra = Configuration.ExtraEvents.Keyboard;
+                        tag = r;
+                        break;
+                    }
             }
             if (c == extraTipEventBox) { config.ExtraTipEvent = extra; config.ExtraTipEventTag = tag; }
             else if (c == extraBottomEventBox) { config.ExtraBottomEvent = extra; config.ExtraBottomEventTag = tag; }
@@ -2224,7 +2235,7 @@ namespace TabletDriverGUI
             return IntPtr.Zero;
         }
 
-        
+
         #endregion
 
 

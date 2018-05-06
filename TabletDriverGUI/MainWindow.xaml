@@ -468,7 +468,7 @@
 
             </StackPanel>
 
-           </StackPanel>
+          </StackPanel>
         </ScrollViewer>
       </TabItem>
       <TabItem Name="tabCommands" Header="Commands">
