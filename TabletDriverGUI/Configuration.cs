@@ -25,6 +25,19 @@ namespace TabletDriverGUI
             Digitizer = 2
         }
 
+        public ExtraEvents ExtraTipEvent;
+        public ExtraEvents ExtraBottomEvent;
+        public ExtraEvents ExtraTopEvent;
+        public string ExtraTipEventTag;
+        public string ExtraBottomEventTag;
+        public string ExtraTopEventTag;
+        public enum ExtraEvents
+        {
+            None = 0,
+            MouseWheel = 1,
+            DisableTablet = 2,
+            Keyboard = 3
+        }
         public Area ScreenArea;
 
         public double SmoothingLatency;

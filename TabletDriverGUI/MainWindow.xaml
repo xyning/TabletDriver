@@ -401,6 +401,28 @@
             <!-- Desktop Size -->
             <StackPanel Orientation="Horizontal"  HorizontalAlignment="Center">
               <!-- Desktop size -->
+              <GroupBox Name="gt" Header="Extra Buttons" HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
+                  <!-- Tip -->
+                  <GroupBox Header="Tip" VerticalAlignment="Top" HorizontalAlignment="Left" Width="136">
+                    <ComboBox x:Name="extraTipEventBox">
+                    </ComboBox>
+                  </GroupBox>
+
+                  <!-- Bottom -->
+                  <GroupBox Header="Bottom" VerticalAlignment="Top" HorizontalAlignment="Left" Width="136">
+                    <ComboBox x:Name="extraBottomEventBox">
+                    </ComboBox>
+                  </GroupBox>
+
+                  <!-- Top -->
+                  <GroupBox Header="Top" VerticalAlignment="Top" HorizontalAlignment="Left" Width="136">
+                    <ComboBox x:Name="extraTopEventBox">
+                    </ComboBox>
+                  </GroupBox>
+                </StackPanel>
+              </GroupBox>
+              <!-- Desktop size -->
               <GroupBox Name="groupDesktopSize" Header="Desktop Size" VerticalAlignment="Bottom" Margin="5,0,0,0" HorizontalAlignment="Left"
                         >
                 <GroupBox.ToolTip>
@@ -446,7 +468,7 @@
 
             </StackPanel>
 
-          </StackPanel>
+           </StackPanel>
         </ScrollViewer>
       </TabItem>
       <TabItem Name="tabCommands" Header="Commands">

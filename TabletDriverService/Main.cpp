@@ -153,7 +153,7 @@ void RunTabletThread() {
 		if (EXTRA_BUTTON_PRESSED(Tablet::MouseWheel) && ((tablet->state.buttons&(1 << 0)) > 0)) {
 			tablet->state.buttons &= ~(1 << 0);
 			double delta = last.y - tablet->state.position.y;
-			mouse_event(MOUSEEVENTF_WHEEL, 0, 0, -delta * 20, 0);
+			mouse_event(MOUSEEVENTF_WHEEL, 0, 0, -delta * (tablet->settings.mouseWheelSpeed), 0);
 		}
 		last = tablet->state.position;
 
@@ -161,7 +161,7 @@ void RunTabletThread() {
 		if(tablet->filterTimedCount == 0 || !filterTimedEnabled) {
 
 			if (EXTRA_BUTTON_PRESSED(Tablet::DisableTablet)) {
-				return;
+				continue;
 			}
 			// Relative mode
 			if(vmulti->mode == VMulti::ModeRelativeMouse) {

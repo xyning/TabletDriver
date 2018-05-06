@@ -181,6 +181,18 @@ namespace TabletDriverGUI
             comboBoxButton2.SelectedIndex = 0;
             comboBoxButton3.SelectedIndex = 0;
 
+            extraTipEventBox.Items.Clear();
+            extraBottomEventBox.Items.Clear();
+            extraTopEventBox.Items.Clear();
+            extraTipEventBox.Items.Add("None");
+            extraBottomEventBox.Items.Add("None");
+            extraTopEventBox.Items.Add("None");
+            extraTipEventBox.Items.Add("Mouse Wheel");
+            extraBottomEventBox.Items.Add("Mouse Wheel");
+            extraTopEventBox.Items.Add("Mouse Wheel");
+            extraTipEventBox.Items.Add("Disable Tablet");
+            extraBottomEventBox.Items.Add("Disable Tablet");
+            extraTopEventBox.Items.Add("Disable Tablet");
 
             //
             // Smoothing rate ComboBox
@@ -369,6 +381,10 @@ namespace TabletDriverGUI
         //
         private void LoadSettingsFromConfiguration()
         {
+            extraTipEventBox.SelectionChanged -= ExtraSelectionChanged;
+            extraBottomEventBox.SelectionChanged -= ExtraSelectionChanged;
+            extraTopEventBox.SelectionChanged -= ExtraSelectionChanged;
+
             isLoadingSettings = true;
 
             //
@@ -469,6 +485,9 @@ namespace TabletDriverGUI
                 comboBoxButton1.SelectedIndex = config.ButtonMap[0] == 8 ? 6 : config.ButtonMap[0];
                 comboBoxButton2.SelectedIndex = config.ButtonMap[1] == 7 ? 6 : config.ButtonMap[0];
                 comboBoxButton3.SelectedIndex = config.ButtonMap[2] == 6 ? 6 : config.ButtonMap[2];
+                extraTipEventBox.SelectedIndex = (int)config.ExtraTipEvent;
+                extraBottomEventBox.SelectedIndex = (int)config.ExtraBottomEvent;
+                extraTopEventBox.SelectedIndex = (int)config.ExtraTopEvent;
             }
             else
             {
@@ -525,6 +544,10 @@ namespace TabletDriverGUI
 
 
             isLoadingSettings = false;
+
+            extraTipEventBox.SelectionChanged += ExtraSelectionChanged;
+            extraBottomEventBox.SelectionChanged += ExtraSelectionChanged;
+            extraTopEventBox.SelectionChanged += ExtraSelectionChanged;
         }
 
         //
@@ -620,6 +643,9 @@ namespace TabletDriverGUI
             config.ButtonMap[1] = comboBoxButton2.SelectedIndex == 6 ? 7 : comboBoxButton2.SelectedIndex;
             config.ButtonMap[2] = comboBoxButton3.SelectedIndex == 6 ? 6 : comboBoxButton3.SelectedIndex;
             config.DisableButtons = (bool)checkBoxDisableButtons.IsChecked;
+            config.ExtraTipEvent = (Configuration.ExtraEvents)extraTipEventBox.SelectedIndex;
+            config.ExtraBottomEvent = (Configuration.ExtraEvents)extraBottomEventBox.SelectedIndex;
+            config.ExtraTopEvent = (Configuration.ExtraEvents)extraTopEventBox.SelectedIndex;
 
 
 
@@ -1218,6 +1244,32 @@ namespace TabletDriverGUI
             UpdateSettingsToConfiguration();
         }
 
+        private void ExtraSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ComboBox c = sender as ComboBox;
+            Configuration.ExtraEvents extra = Configuration.ExtraEvents.None;
+            string tag = "";
+            switch ((Configuration.ExtraEvents)c.SelectedIndex)
+            {
+                case Configuration.ExtraEvents.None: { break; }
+                case Configuration.ExtraEvents.MouseWheel:
+                    {
+                        ExtraButtonConfig.MouseWheel mouseWheel = new ExtraButtonConfig.MouseWheel();
+                        mouseWheel.ShowDialog();
+                        int i = mouseWheel.Value;
+                        extra = Configuration.ExtraEvents.MouseWheel;
+                        tag = i.ToString();
+                        break;
+                    }
+                case Configuration.ExtraEvents.DisableTablet: { break; }
+                case Configuration.ExtraEvents.Keyboard: { break; }
+            }
+            if (c == extraTipEventBox) { config.ExtraTipEvent = extra; config.ExtraTipEventTag = tag; }
+            else if (c == extraBottomEventBox) { config.ExtraBottomEvent = extra; config.ExtraBottomEventTag = tag; }
+            else if (c == extraTopEventBox) { config.ExtraTopEvent = extra; config.ExtraTopEventTag = tag; }
+            UpdateSettingsToConfiguration();
+        }
+
         // Window size changed
         private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
@@ -1693,6 +1745,11 @@ namespace TabletDriverGUI
                 driver.SendCommand("Smoothing 0");
             }
 
+            // Extra Buttons
+            driver.SendCommand("Extra 0 " + config.ExtraTipEvent.ToString() + " " + config.ExtraTipEventTag);
+            driver.SendCommand("Extra 1 " + config.ExtraBottomEvent.ToString() + " " + config.ExtraBottomEventTag);
+            driver.SendCommand("Extra 2 " + config.ExtraTopEvent.ToString() + " " + config.ExtraTopEventTag);
+
             // Commands after settings
             if (config.CommandsAfter.Length > 0)
             {
@@ -2167,7 +2224,7 @@ namespace TabletDriverGUI
             return IntPtr.Zero;
         }
 
-
+        
         #endregion
 
 

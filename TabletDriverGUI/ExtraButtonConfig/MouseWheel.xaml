@@ -1,0 +1,15 @@
+﻿<Window x:Class="TabletDriverGUI.ExtraButtonConfig.MouseWheel"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TabletDriverGUI.ExtraButtonConfig"
+        mc:Ignorable="d"
+        Title="Mouse Wheel Speed" Height="100" Width="400" ResizeMode="NoResize">
+    <Grid>
+        <Slider x:Name="slider" Margin="10,10,9.6,0" VerticalAlignment="Top" Height="25" Minimum="1" Maximum="200" LargeChange="20" SmallChange="10" Value="20" Loaded="Slider_Loaded"/>
+        <Label x:Name="label" Content="20" HorizontalAlignment="Left" Margin="10,0,0,10.4" VerticalAlignment="Bottom"/>
+        <Button Content="OK" HorizontalAlignment="Right" Margin="0,0,9.6,10.4" VerticalAlignment="Bottom" Width="75" Click="Button_Click"/>
+
+    </Grid>
+</Window>

@@ -742,28 +742,25 @@ bool ProcessCommand(CommandLine *cmd) {
 		//TODO
 		int index = cmd->GetInt(0, 0);
 		string c = cmd->GetStringLower(1, "none");
-		switch (index)
-		{
-		case 0: {
-			if (c == "none") { tablet->btn1 = Tablet::None; }
-			if (c == "disabletablet") { tablet->btn1 = Tablet::DisableTablet; }
-			if (c == "mousewheel") { tablet->btn1 = Tablet::MouseWheel; }
-			break;
+		Tablet::ExtraButtons *btn = &tablet->btn1;
+		switch (index) {
+		case 0: { btn = &tablet->btn1; break; }
+		case 1: { btn = &tablet->btn2; break; }
+		case 2: { btn = &tablet->btn3; break; }
+		default: break;
 		}
-		case 1: {
-			if (c == "none") { tablet->btn2 = Tablet::None; }
-			if (c == "disabletablet") { tablet->btn2 = Tablet::DisableTablet; }
-			if (c == "mousewheel") { tablet->btn2 = Tablet::MouseWheel; }
-			break;
+		if (c == "none") {
+			*btn = Tablet::None;
+			LOG_INFO("NoneEx: %d\n", index);
 		}
-		case 2: {
-			if (c == "none") { tablet->btn3 = Tablet::None; }
-			if (c == "disabletablet") { tablet->btn3 = Tablet::DisableTablet; }
-			if (c == "mousewheel") { tablet->btn3 = Tablet::MouseWheel; }
-			break;
+		if (c == "disabletablet") {
+			*btn = Tablet::DisableTablet;
+			LOG_INFO("DisableTabletEx: %d\n", index);
 		}
-		default:
-			break;
+		if (c == "mousewheel") { 
+			*btn = Tablet::MouseWheel;
+			tablet->settings.mouseWheelSpeed = cmd->GetInt(2, 20);
+			LOG_INFO("MouseWheelEx: %d, Speed: %d\n", index, tablet->settings.mouseWheelSpeed);
 		}
 	}
 
