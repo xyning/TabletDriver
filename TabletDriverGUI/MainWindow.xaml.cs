@@ -617,8 +617,8 @@ namespace TabletDriverGUI
 
             // Button map 
             config.ButtonMap[0] = comboBoxButton1.SelectedIndex == 6 ? 8 : comboBoxButton1.SelectedIndex;
-            config.ButtonMap[1] = comboBoxButton2.SelectedIndex == 6 ? 7 : comboBoxButton1.SelectedIndex;
-            config.ButtonMap[2] = comboBoxButton3.SelectedIndex == 6 ? 6 : comboBoxButton1.SelectedIndex;
+            config.ButtonMap[1] = comboBoxButton2.SelectedIndex == 6 ? 7 : comboBoxButton2.SelectedIndex;
+            config.ButtonMap[2] = comboBoxButton3.SelectedIndex == 6 ? 6 : comboBoxButton3.SelectedIndex;
             config.DisableButtons = (bool)checkBoxDisableButtons.IsChecked;
 
 
