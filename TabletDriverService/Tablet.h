@@ -29,6 +29,10 @@ public:
 		Button5, Button6, Button7, Button8
 	};
 
+	enum ExtraButtons {
+		None, DisableTablet, MouseWheel
+	};
+
 	// Tablet packet state
 	enum TabletPacketState {
 		PacketPositionInvalid = 0,
@@ -83,6 +87,9 @@ public:
 
 	// Button map
 	BYTE buttonMap[16];
+	ExtraButtons btn1 = None;
+	ExtraButtons btn2 = None;
+	ExtraButtons btn3 = None;
 
 	//
 	string name = "Unknown";

@@ -737,6 +737,37 @@ bool ProcessCommand(CommandLine *cmd) {
 	}
 
 
+	// Extra Button Setting
+	else if (cmd->is("Extra")) {
+		//TODO
+		int index = cmd->GetInt(0, 0);
+		string c = cmd->GetStringLower(1, "none");
+		switch (index)
+		{
+		case 0: {
+			if (c == "none") { tablet->btn1 = Tablet::None; }
+			if (c == "disabletablet") { tablet->btn1 = Tablet::DisableTablet; }
+			if (c == "mousewheel") { tablet->btn1 = Tablet::MouseWheel; }
+			break;
+		}
+		case 1: {
+			if (c == "none") { tablet->btn2 = Tablet::None; }
+			if (c == "disabletablet") { tablet->btn2 = Tablet::DisableTablet; }
+			if (c == "mousewheel") { tablet->btn2 = Tablet::MouseWheel; }
+			break;
+		}
+		case 2: {
+			if (c == "none") { tablet->btn3 = Tablet::None; }
+			if (c == "disabletablet") { tablet->btn3 = Tablet::DisableTablet; }
+			if (c == "mousewheel") { tablet->btn3 = Tablet::MouseWheel; }
+			break;
+		}
+		default:
+			break;
+		}
+	}
+
+
 	// Unknown
 	else if(cmd->isValid) {
 		LOG_WARNING("Unknown command: %s\n", cmd->line.c_str());
