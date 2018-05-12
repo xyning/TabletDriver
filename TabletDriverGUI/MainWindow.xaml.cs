@@ -45,7 +45,6 @@ namespace TabletDriverGUI
 
         // Config
         private Configuration config;
-        private string configFilename;
         private bool isFirstStart = false;
         private bool isLoadingSettings;
 
@@ -229,7 +228,7 @@ namespace TabletDriverGUI
             notifyIcon.Visible = false;
             try
             {
-                config.Write(configFilename);
+                config.Write();
             }
             catch (Exception)
             {
@@ -241,13 +240,10 @@ namespace TabletDriverGUI
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
 
-            // Configuration filename
-            configFilename = "config/config.xml";
-
             // Load configuration
             try
             {
-                config = Configuration.CreateFromFile(configFilename);
+                config = Configuration.CreateFromFile();
             }
             catch (Exception)
             {
@@ -256,8 +252,8 @@ namespace TabletDriverGUI
                 config = new Configuration();
             }
             isLoadingSettings = true;
-            Width = config.WindowWidth;
-            Height = config.WindowHeight;
+            //Width = config.WindowWidth;
+            //Height = config.WindowHeight;
             isLoadingSettings = false;
 
 
@@ -486,11 +482,11 @@ namespace TabletDriverGUI
             if (config.ButtonMap.Count() == 3)
             {
                 comboBoxButton1.SelectedIndex = config.ButtonMap[0] == 8 ? 6 : config.ButtonMap[0];
-                comboBoxButton2.SelectedIndex = config.ButtonMap[1] == 7 ? 6 : config.ButtonMap[0];
+                comboBoxButton2.SelectedIndex = config.ButtonMap[1] == 7 ? 6 : config.ButtonMap[1];
                 comboBoxButton3.SelectedIndex = config.ButtonMap[2] == 6 ? 6 : config.ButtonMap[2];
-                extraTipEventBox.SelectedIndex = (int)config.ExtraTipEvent;
-                extraBottomEventBox.SelectedIndex = (int)config.ExtraBottomEvent;
-                extraTopEventBox.SelectedIndex = (int)config.ExtraTopEvent;
+                extraTipEventBox.SelectedIndex = (int)config.ExtraButtonEvents[0];
+                extraBottomEventBox.SelectedIndex = (int)config.ExtraButtonEvents[1];
+                extraTopEventBox.SelectedIndex = (int)config.ExtraButtonEvents[2];
             }
             else
             {
@@ -646,11 +642,12 @@ namespace TabletDriverGUI
             config.ButtonMap[1] = comboBoxButton2.SelectedIndex == 6 ? 7 : comboBoxButton2.SelectedIndex;
             config.ButtonMap[2] = comboBoxButton3.SelectedIndex == 6 ? 6 : comboBoxButton3.SelectedIndex;
             config.DisableButtons = (bool)checkBoxDisableButtons.IsChecked;
-            config.ExtraTipEvent = (Configuration.ExtraEvents)extraTipEventBox.SelectedIndex;
-            config.ExtraBottomEvent = (Configuration.ExtraEvents)extraBottomEventBox.SelectedIndex;
-            config.ExtraTopEvent = (Configuration.ExtraEvents)extraTopEventBox.SelectedIndex;
+            config.ExtraButtonEvents[0] = (Configuration.ExtraEvents)extraTipEventBox.SelectedIndex;
+            config.ExtraButtonEvents[1] = (Configuration.ExtraEvents)extraBottomEventBox.SelectedIndex;
+            config.ExtraButtonEvents[2] = (Configuration.ExtraEvents)extraTopEventBox.SelectedIndex;
 
-
+            int.TryParse(textDesktopWidth.Text, out config.DesktopWidth);
+            int.TryParse(textDesktopHeight.Text, out config.DesktopHeight);
 
             // Filter
             config.SmoothingEnabled = (bool)checkBoxSmoothing.IsChecked;
@@ -909,6 +906,10 @@ namespace TabletDriverGUI
         //
         void UpdateCanvasElements()
         {
+            if (canvasScreenMap == null || canvasScreenMap.ActualWidth == 0)
+            {
+                return;
+            }
             UpdateScreenMapCanvas();
             UpdateTabletAreaCanvas();
         }
@@ -945,14 +946,18 @@ namespace TabletDriverGUI
 
             // Screen aspect ratio text
             textScreenAspectRatio.Text = Utils.GetNumberString(config.ScreenArea.Width / config.ScreenArea.Height, "0.###") + ":1";
-            Canvas.SetLeft(textScreenAspectRatio, offsetX +
-                (config.ScreenArea.X + config.ScreenArea.Width / 2.0) * scale -
-                textScreenAspectRatio.ActualWidth / 2.0
-            );
-            Canvas.SetTop(textScreenAspectRatio, offsetY +
-                (config.ScreenArea.Y + config.ScreenArea.Height / 2.0) * scale -
-                textScreenAspectRatio.ActualHeight / 2.0
-            );
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                Canvas.SetLeft(textScreenAspectRatio, offsetX +
+                              (config.ScreenArea.X + config.ScreenArea.Width / 2.0) * scale -
+                              textScreenAspectRatio.ActualWidth / 2.0
+                          );
+                Canvas.SetTop(textScreenAspectRatio, offsetY +
+                    (config.ScreenArea.Y + config.ScreenArea.Height / 2.0) * scale -
+                    textScreenAspectRatio.ActualHeight / 2.0
+                );
+            }));
+
 
 
 
@@ -1061,9 +1066,11 @@ namespace TabletDriverGUI
             // Tablet area aspect ratio text
             //
             textTabletAspectRatio.Text = Utils.GetNumberString(config.TabletArea.Width / config.TabletArea.Height, "0.###") + ":1";
-            Canvas.SetLeft(textTabletAspectRatio, offsetX + (config.TabletArea.X) * scale - textTabletAspectRatio.ActualWidth / 2.0);
-            Canvas.SetTop(textTabletAspectRatio, offsetY + (config.TabletArea.Y) * scale - textTabletAspectRatio.ActualHeight / 2.0);
-
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                Canvas.SetLeft(textTabletAspectRatio, offsetX + (config.TabletArea.X) * scale - textTabletAspectRatio.ActualWidth / 2.0);
+                Canvas.SetTop(textTabletAspectRatio, offsetY + (config.TabletArea.Y) * scale - textTabletAspectRatio.ActualHeight / 2.0);
+            }));
 
         }
 
@@ -1275,9 +1282,9 @@ namespace TabletDriverGUI
                         break;
                     }
             }
-            if (c == extraTipEventBox) { config.ExtraTipEvent = extra; config.ExtraTipEventTag = tag; }
-            else if (c == extraBottomEventBox) { config.ExtraBottomEvent = extra; config.ExtraBottomEventTag = tag; }
-            else if (c == extraTopEventBox) { config.ExtraTopEvent = extra; config.ExtraTopEventTag = tag; }
+            if (c == extraTipEventBox) { config.ExtraButtonEvents[0] = extra; config.ExtraButtonEventTag[0] = tag; }
+            else if (c == extraBottomEventBox) { config.ExtraButtonEvents[1] = extra; config.ExtraButtonEventTag[1] = tag; }
+            else if (c == extraTopEventBox) { config.ExtraButtonEvents[2] = extra; config.ExtraButtonEventTag[2] = tag; }
             UpdateSettingsToConfiguration();
         }
 
@@ -1359,8 +1366,8 @@ namespace TabletDriverGUI
         {
             try
             {
-                config.Write(configFilename);
-                SendSettingsToDriver();
+                config.Write();
+                config.SendToDriver(driver);
                 SetStatus("Settings saved!");
             }
             catch (Exception)
@@ -1378,7 +1385,7 @@ namespace TabletDriverGUI
         //
         private void ApplySettings(object sender, RoutedEventArgs e)
         {
-            SendSettingsToDriver();
+            config.SendToDriver(driver);
             SetStatus("Settings applied!");
         }
 
@@ -1553,7 +1560,7 @@ namespace TabletDriverGUI
             }
             driver.SendCommand("Echo");
             driver.SendCommand("CheckTablet");
-            SendSettingsToDriver();
+            config.SendToDriver(driver);
             driver.SendCommand("Info");
             driver.SendCommand("Start");
             driver.SendCommand("Log Off");
@@ -1619,7 +1626,8 @@ namespace TabletDriverGUI
                 if (title.Length > 63)
                 {
                     notifyIcon.Text = title.Substring(0, 63);
-                } else
+                }
+                else
                 {
                     notifyIcon.Text = title;
                 }
@@ -1638,7 +1646,7 @@ namespace TabletDriverGUI
                     LoadSettingsFromConfiguration();
                     UpdateSettingsToConfiguration();
                     if (isFirstStart)
-                        SendSettingsToDriver();
+                        config.SendToDriver(driver);
                 }
             }
 
@@ -1654,126 +1662,12 @@ namespace TabletDriverGUI
                     LoadSettingsFromConfiguration();
                     UpdateSettingsToConfiguration();
                     if (isFirstStart)
-                        SendSettingsToDriver();
+                        config.SendToDriver(driver);
 
                 }
             }
         }
 
-        //
-        // Send settings to the driver
-        //
-        private void SendSettingsToDriver()
-        {
-            if (!driver.IsRunning) return;
-
-            // Commands before settings
-            if (config.CommandsBefore.Length > 0)
-            {
-                foreach (string command in config.CommandsBefore)
-                {
-                    string tmp = command.Trim();
-                    if (tmp.Length > 0)
-                    {
-                        driver.SendCommand(tmp);
-                    }
-                }
-            }
-
-
-            // Desktop size
-            driver.SendCommand("DesktopSize " + textDesktopWidth.Text + " " + textDesktopHeight.Text);
-
-
-            // Screen area
-            driver.SendCommand("ScreenArea " +
-                Utils.GetNumberString(config.ScreenArea.Width) + " " + Utils.GetNumberString(config.ScreenArea.Height) + " " +
-                Utils.GetNumberString(config.ScreenArea.X) + " " + Utils.GetNumberString(config.ScreenArea.Y)
-            );
-
-
-            //
-            // Tablet area
-            //
-            // Inverted
-            if (config.Invert)
-            {
-                driver.SendCommand("TabletArea " +
-                    Utils.GetNumberString(config.TabletArea.Width) + " " +
-                    Utils.GetNumberString(config.TabletArea.Height) + " " +
-                    Utils.GetNumberString(config.TabletFullArea.Width - config.TabletArea.X) + " " +
-                    Utils.GetNumberString(config.TabletFullArea.Height - config.TabletArea.Y)
-                );
-                driver.SendCommand("Rotate " + Utils.GetNumberString(config.TabletArea.Rotation + 180));
-            }
-            // Normal
-            else
-            {
-                driver.SendCommand("TabletArea " +
-                    Utils.GetNumberString(config.TabletArea.Width) + " " +
-                    Utils.GetNumberString(config.TabletArea.Height) + " " +
-                    Utils.GetNumberString(config.TabletArea.X) + " " +
-                    Utils.GetNumberString(config.TabletArea.Y)
-                );
-                driver.SendCommand("Rotate " + Utils.GetNumberString(config.TabletArea.Rotation));
-            }
-
-
-            // Output Mode
-            switch (config.OutputMode)
-            {
-                case Configuration.OutputModes.Absolute:
-                    driver.SendCommand("Mode Absolute");
-                    break;
-                case Configuration.OutputModes.Relative:
-                    driver.SendCommand("Mode Relative");
-                    driver.SendCommand("Sensitivity " + Utils.GetNumberString(config.ScreenArea.Width / config.TabletArea.Width));
-                    break;
-                case Configuration.OutputModes.Digitizer:
-                    driver.SendCommand("Mode Digitizer");
-                    break;
-            }
-
-
-            // Button map
-            if (config.DisableButtons)
-            {
-                driver.SendCommand("ButtonMap 0 0 0");
-            }
-            else
-            {
-                driver.SendCommand("ButtonMap " + String.Join(" ", config.ButtonMap));
-            }
-
-            // Smoothing filter
-            if (config.SmoothingEnabled)
-            {
-                driver.SendCommand("Smoothing " + Utils.GetNumberString(config.SmoothingLatency));
-                driver.SendCommand("SmoothingInterval " + Utils.GetNumberString(config.SmoothingInterval));
-            }
-            else
-            {
-                driver.SendCommand("Smoothing 0");
-            }
-
-            // Extra Buttons
-            driver.SendCommand("Extra 0 " + config.ExtraTipEvent.ToString() + " " + config.ExtraTipEventTag);
-            driver.SendCommand("Extra 1 " + config.ExtraBottomEvent.ToString() + " " + config.ExtraBottomEventTag);
-            driver.SendCommand("Extra 2 " + config.ExtraTopEvent.ToString() + " " + config.ExtraTopEventTag);
-
-            // Commands after settings
-            if (config.CommandsAfter.Length > 0)
-            {
-                foreach (string command in config.CommandsAfter)
-                {
-                    string tmp = command.Trim();
-                    if (tmp.Length > 0)
-                    {
-                        driver.SendCommand(tmp);
-                    }
-                }
-            }
-        }
 
         //
         // Start driver
@@ -2236,8 +2130,12 @@ namespace TabletDriverGUI
         }
 
 
+
         #endregion
 
-
+        private void canvasLoaded(object sender, RoutedEventArgs e)
+        {
+            UpdateCanvasElements();
+        }
     }
 }
