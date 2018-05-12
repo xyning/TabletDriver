@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TabletDriverGUI"
         mc:Ignorable="d"
-        Title="TabletDriverGUI" Height="550" Width="600" ResizeMode="NoResize"
+        Title="TabletDriverGUI" Height="485" Width="620" ResizeMode="NoResize" Activated="Window_Activated"
         >
     <Window.Resources>
         <Style TargetType="GroupBox">
@@ -41,7 +41,7 @@
                     <!-- Desktop Size -->
                     <Grid>
                         <!-- Desktop size -->
-                        <GroupBox Name="gt" Header="Extra Events" HorizontalAlignment="Right" Margin="0,10,10.2,0" Width="200" Height="300" VerticalAlignment="Top">
+                        <GroupBox Name="gt" Header="Extra Events" HorizontalAlignment="Right" Margin="0,10,10.2,100.4" Width="200">
                             <Grid>
                                 <!-- Tip -->
                                 <GroupBox Header="Tip" VerticalAlignment="Top" Margin="10,10,10.2,0">
@@ -63,7 +63,7 @@
                             </Grid>
                         </GroupBox>
                         <!-- Desktop size -->
-                        <GroupBox Name="groupDesktopSize" Header="Desktop Size" VerticalAlignment="Top" Margin="215,10,215.2,0" Height="300"
+                        <GroupBox Name="groupDesktopSize" Header="Desktop Size" Margin="215,10,215.2,100.4"
                         >
                             <GroupBox.ToolTip>
                                 <StackPanel>
@@ -105,7 +105,7 @@
                                           Checked="CheckboxChanged" Unchecked="CheckboxChanged">Auto</CheckBox>
                             </Grid>
                         </GroupBox>
-                        <GroupBox Header="Button Mapping" VerticalAlignment="Top" HorizontalAlignment="Left" Height="300" Margin="10,10,0,0" Width="200">
+                        <GroupBox Header="Button Mapping" HorizontalAlignment="Left" Margin="10,10,0,100.4" Width="200">
                             <GroupBox.ToolTip>
                                 <StackPanel>
                                     <TextBlock FontWeight="Bold"><Run Text="Button Mapping"/></TextBlock>
@@ -194,7 +194,7 @@
                 <Grid>
 
                     <!-- Screen Mapping -->
-                    <GroupBox Header="Screen Map" Margin="10,0,10.4,9.6" Height="210" VerticalAlignment="Bottom">
+                    <GroupBox Header="Screen Map" Margin="10,174,10.2,9">
 
                         <GroupBox.ToolTip>
                             <StackPanel>
@@ -222,8 +222,8 @@
                                     MouseDown="Canvas_MouseDown"
                                     MouseMove="Canvas_MouseMove"
                                     MouseUp="Canvas_MouseUp" HorizontalAlignment="Left"
-                                    Width="310" Margin="10,10,0,10.2"/>
-                            <GroupBox Header="Width" Height="50" Margin="0,10,114.6,127.2" HorizontalAlignment="Right" Width="100">
+                                    Width="240" Margin="10,10,0,9.6"/>
+                            <GroupBox Header="Width" Height="50" Margin="0,10,104.2,0" HorizontalAlignment="Right" Width="90" VerticalAlignment="Top">
                                 <Grid>
                                     <TextBox x:Name="textScreenAreaWidth" Padding="4,0,0,0"
                                              HorizontalContentAlignment="Left" VerticalContentAlignment="Center"
@@ -231,7 +231,7 @@
                                     <Label Width="30" HorizontalAlignment="Right" Content="px"/>
                                 </Grid>
                             </GroupBox>
-                            <GroupBox Header="Height" Height="50" Margin="0,10,9.6,127.2" HorizontalAlignment="Right" Width="100">
+                            <GroupBox Header="Height" Height="50" Margin="0,10,9.2,0" HorizontalAlignment="Right" Width="90" VerticalAlignment="Top">
                                 <Grid>
                                     <TextBox x:Name="textScreenAreaHeight" Padding="4,0,0,0"
                                              HorizontalContentAlignment="Left" VerticalContentAlignment="Center"
@@ -239,7 +239,7 @@
                                     <Label Width="30" HorizontalAlignment="Right" Content="px"/>
                                 </Grid>
                             </GroupBox>
-                            <GroupBox Header="Left Offset" Height="50" Margin="0,65,114.6,0" HorizontalAlignment="Right" Width="100" VerticalAlignment="Top">
+                            <GroupBox Header="Left Offset" Height="50" Margin="0,10,199.2,0" HorizontalAlignment="Right" Width="100" VerticalAlignment="Top">
                                 <Grid>
                                     <TextBox x:Name="textScreenAreaX" Padding="4,0,0,0"
                                              HorizontalContentAlignment="Left" VerticalContentAlignment="Center"
@@ -247,7 +247,7 @@
                                     <Label Width="30" HorizontalAlignment="Right" Content="px"/>
                                 </Grid>
                             </GroupBox>
-                            <GroupBox Header="Top Offset" Height="50" Margin="0,65,9.6,0" HorizontalAlignment="Right" Width="100" VerticalAlignment="Top">
+                            <GroupBox Header="Top Offset" Height="50" Margin="0,65,199.2,0" HorizontalAlignment="Right" Width="100" VerticalAlignment="Top">
                                 <Grid>
                                     <TextBox x:Name="textScreenAreaY" Padding="4,0,0,0"
                                              HorizontalContentAlignment="Left" VerticalContentAlignment="Center"
@@ -255,7 +255,7 @@
                                     <Label Width="30" HorizontalAlignment="Right" Content="px"/>
                                 </Grid>
                             </GroupBox>
-                            <GroupBox Header="Set Area" Height="50" Margin="0,0,9.2,10.2" HorizontalAlignment="Right" Width="205" VerticalAlignment="Bottom">
+                            <GroupBox Header="Set Area" Height="50" Margin="0,65,9.2,0" HorizontalAlignment="Right" Width="185" VerticalAlignment="Top">
                                 <ComboBox x:Name="comboBoxMonitor" PreviewMouseDown="ComboBoxMonitor_MouseDown"
                                           SelectionChanged="ComboBoxMonitor_SelectionChanged"/>
                             </GroupBox>
@@ -263,7 +263,7 @@
                     </GroupBox>
 
                     <!-- Tablet area -->
-                    <GroupBox Header="Tablet Area" VerticalAlignment="Top" Height="180" Margin="10,5,10.4,0">
+                    <GroupBox Header="Tablet Area" Margin="10,5,10.2,178">
                         <GroupBox.ToolTip>
                             <StackPanel>
                                 <TextBlock FontWeight="Bold">
@@ -295,7 +295,7 @@
                             </GroupBox>
 
                             <!-- Tablet Area Height -->
-                            <GroupBox Header="Height" Height="50" Width="90" Margin="0,65,10.2,0" VerticalAlignment="Top" HorizontalAlignment="Right">
+                            <GroupBox Header="Height" Height="50" Width="90" Margin="0,60,10.4,0" VerticalAlignment="Top" HorizontalAlignment="Right">
                                 <Grid>
                                     <TextBox Name="textTabletAreaHeight" Padding="4,0,0,0"
                                                  HorizontalContentAlignment="Left" VerticalContentAlignment="Center"
@@ -315,7 +315,7 @@
                             </GroupBox>
 
                             <!-- Tablet Area Top -->
-                            <GroupBox Header="Y" Height="50" Width="90" Margin="0,65,105.2,0" HorizontalAlignment="Right" VerticalAlignment="Top">
+                            <GroupBox Header="Y" Height="50" Width="90" Margin="0,60,105.4,0" HorizontalAlignment="Right" VerticalAlignment="Top">
                                 <Grid>
                                     <TextBox Name="textTabletAreaY" Padding="4,0,0,0"
                                                  HorizontalContentAlignment="Left" VerticalContentAlignment="Center"
@@ -325,30 +325,29 @@
                             </GroupBox>
 
                             <!-- Force Aspect Ratio -->
-                            <CheckBox Name="checkBoxForceAspect" VerticalAlignment="Bottom" Margin="0,0,105.2,13.6"
+                            <CheckBox Name="checkBoxForceAspect" VerticalAlignment="Bottom" Margin="0,0,183.2,9.6"
                                           VerticalContentAlignment="Center"
                                           Checked="CheckboxChanged" Unchecked="CheckboxChanged" 
-                                          HorizontalAlignment="Right" Width="195">
+                                          HorizontalAlignment="Right">
                                 <StackPanel Orientation="Vertical">
                                     <TextBlock>Force Aspect Ratio</TextBlock>
 
                                 </StackPanel>
                             </CheckBox>
-                            <CheckBox x:Name="checkBoxForceFullArea" Margin="0,0,210.6,53.6"
+                            <CheckBox x:Name="checkBoxForceFullArea" Margin="0,0,10.2,9.6"
                                           Checked="CheckboxChanged"
-                                          Unchecked="CheckboxChanged" Content="Full Area" Height="17"
-                                          VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="90"/>
-                            <CheckBox x:Name="checkBoxInvert" Margin="0,0,210.6,33.6"
+                                          Unchecked="CheckboxChanged" Content="Full Area"
+                                          VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
+                            <CheckBox x:Name="checkBoxInvert" Margin="0,0,85.2,9.6"
                                           VerticalContentAlignment="Center"
                                           Checked="CheckboxChanged"
-                                          Unchecked="CheckboxChanged" HorizontalAlignment="Right"
-                                          Width="90" Height="15" VerticalAlignment="Bottom">
+                                          Unchecked="CheckboxChanged" HorizontalAlignment="Right" VerticalAlignment="Bottom">
                                 <TextBlock><Run Text="Left handed"/></TextBlock>
                             </CheckBox>
-                            <Button x:Name="buttonWacomArea" Content="Wacom Area" Width="90"
-                                        Padding="5 5 5 5" Margin="0,0,9.6,9.6"
+                            <Button x:Name="buttonWacomArea" Content="Wacom Area" Width="88"
+                                        Padding="5 5 5 5" Margin="0,76,205.4,0"
                                         HorizontalAlignment="Right"
-                                        Click="ButtonWacomArea_Click" Height="26" VerticalAlignment="Bottom" />
+                                        Click="ButtonWacomArea_Click" Height="28" VerticalAlignment="Top" />
                             <GroupBox Header="Rotation" Height="50" Width="100" Margin="0,10,200.2,0" HorizontalAlignment="Right" VerticalAlignment="Top">
                                 <Grid>
                                     <TextBox x:Name="textTabletAreaRotation" Padding="4,0,0,0"
@@ -363,7 +362,7 @@
                                         ClipToBounds="True"                      
                                         MouseDown="Canvas_MouseDown"
                                         MouseMove="Canvas_MouseMove"
-                                        MouseUp="Canvas_MouseUp" HorizontalAlignment="Left" Width="230" Loaded="canvasLoaded"/>
+                                        MouseUp="Canvas_MouseUp" HorizontalAlignment="Left" Width="240" Loaded="canvasLoaded"/>
                         </Grid>
                     </GroupBox>
                 </Grid>

@@ -35,8 +35,8 @@ namespace TabletDriverGUI
         public bool IsRealExit;
 
         // Driver
-        private TabletDriver driver;
-        private bool running;
+        public static TabletDriver driver;
+        public static bool running;
 
         // Timers
         private DispatcherTimer timerStatusbar;
@@ -44,8 +44,6 @@ namespace TabletDriverGUI
         private DispatcherTimer timerConsoleUpdate;
 
         // Config
-        private Configuration config;
-        private bool isFirstStart = false;
         private bool isLoadingSettings;
 
         // Screen map canvas elements
@@ -216,6 +214,8 @@ namespace TabletDriverGUI
 
             //
             isLoadingSettings = false;
+
+            ConfigurationManager.ConfigurationChanged += () => LoadSettingsFromConfiguration();
         }
 
 
@@ -228,7 +228,7 @@ namespace TabletDriverGUI
             notifyIcon.Visible = false;
             try
             {
-                config.Write();
+                ConfigurationManager.Current.Write();
             }
             catch (Exception)
             {
@@ -241,15 +241,9 @@ namespace TabletDriverGUI
         {
 
             // Load configuration
-            try
-            {
-                config = Configuration.CreateFromFile();
-            }
-            catch (Exception)
+            if (ConfigurationManager.isFirstStart)
             {
                 driver.ConsoleAddText("New config created!");
-                isFirstStart = true;
-                config = new Configuration();
             }
             isLoadingSettings = true;
             //Width = config.WindowWidth;
@@ -257,20 +251,20 @@ namespace TabletDriverGUI
             isLoadingSettings = false;
 
 
-            if (!config.DeveloperMode)
+            if (!ConfigurationManager.Current.DeveloperMode)
             {
             }
 
 
             // Invalid config -> Set defaults
-            if (config.ScreenArea.Width == 0 || config.ScreenArea.Height == 0)
+            if (ConfigurationManager.Current.ScreenArea.Width == 0 || ConfigurationManager.Current.ScreenArea.Height == 0)
             {
-                config.DesktopSize.Width = GetVirtualDesktopSize().Width;
-                config.DesktopSize.Height = GetVirtualDesktopSize().Height;
-                config.ScreenArea.Width = config.DesktopSize.Width;
-                config.ScreenArea.Height = config.DesktopSize.Height;
-                config.ScreenArea.X = 0;
-                config.ScreenArea.Y = 0;
+                ConfigurationManager.Current.DesktopSize.Width = GetVirtualDesktopSize().Width;
+                ConfigurationManager.Current.DesktopSize.Height = GetVirtualDesktopSize().Height;
+                ConfigurationManager.Current.ScreenArea.Width = ConfigurationManager.Current.DesktopSize.Width;
+                ConfigurationManager.Current.ScreenArea.Height = ConfigurationManager.Current.DesktopSize.Height;
+                ConfigurationManager.Current.ScreenArea.X = 0;
+                ConfigurationManager.Current.ScreenArea.Y = 0;
             }
 
             // Create canvas elements
@@ -284,7 +278,7 @@ namespace TabletDriverGUI
 
 
             // Set run at startup
-            SetRunAtStartup(config.RunAtStartup);
+            SetRunAtStartup(ConfigurationManager.Current.RunAtStartup);
 
             // Hide the window if the GUI is started as minimized
             if (WindowState == WindowState.Minimized)
@@ -380,173 +374,178 @@ namespace TabletDriverGUI
         //
         private void LoadSettingsFromConfiguration()
         {
-            extraTipEventBox.SelectionChanged -= ExtraSelectionChanged;
-            extraBottomEventBox.SelectionChanged -= ExtraSelectionChanged;
-            extraTopEventBox.SelectionChanged -= ExtraSelectionChanged;
-
-            isLoadingSettings = true;
-
-            //
-            // Tablet area
-            //
-            textTabletAreaWidth.Text = Utils.GetNumberString(config.TabletArea.Width);
-            textTabletAreaHeight.Text = Utils.GetNumberString(config.TabletArea.Height);
-            textTabletAreaX.Text = Utils.GetNumberString(config.TabletArea.X);
-            textTabletAreaY.Text = Utils.GetNumberString(config.TabletArea.Y);
-            checkBoxForceAspect.IsChecked = config.ForceAspectRatio;
-            checkBoxForceFullArea.IsChecked = config.ForceFullArea;
-            switch (config.OutputMode)
+            Dispatcher.Invoke(new Action(() =>
             {
-                case Configuration.OutputModes.Absolute:
-                    radioModeAbsolute.IsChecked = true;
-                    break;
-                case Configuration.OutputModes.Relative:
-                    radioModeRelative.IsChecked = true;
-                    break;
-                case Configuration.OutputModes.Digitizer:
-                    radioModeDigitizer.IsChecked = true;
-                    break;
-            }
-            textTabletAreaRotation.Text = Utils.GetNumberString(config.TabletArea.Rotation);
-            checkBoxInvert.IsChecked = config.Invert;
+                extraTipEventBox.SelectionChanged -= ExtraSelectionChanged;
+                extraBottomEventBox.SelectionChanged -= ExtraSelectionChanged;
+                extraTopEventBox.SelectionChanged -= ExtraSelectionChanged;
+
+                isLoadingSettings = true;
+
+                //
+                // Tablet area
+                //
+                textTabletAreaWidth.Text = Utils.GetNumberString(ConfigurationManager.Current.TabletArea.Width);
+                textTabletAreaHeight.Text = Utils.GetNumberString(ConfigurationManager.Current.TabletArea.Height);
+                textTabletAreaX.Text = Utils.GetNumberString(ConfigurationManager.Current.TabletArea.X);
+                textTabletAreaY.Text = Utils.GetNumberString(ConfigurationManager.Current.TabletArea.Y);
+                checkBoxForceAspect.IsChecked = ConfigurationManager.Current.ForceAspectRatio;
+                checkBoxForceFullArea.IsChecked = ConfigurationManager.Current.ForceFullArea;
+                switch (ConfigurationManager.Current.OutputMode)
+                {
+                    case Configuration.OutputModes.Absolute:
+                        radioModeAbsolute.IsChecked = true;
+                        break;
+                    case Configuration.OutputModes.Relative:
+                        radioModeRelative.IsChecked = true;
+                        break;
+                    case Configuration.OutputModes.Digitizer:
+                        radioModeDigitizer.IsChecked = true;
+                        break;
+                }
+                textTabletAreaRotation.Text = Utils.GetNumberString(ConfigurationManager.Current.TabletArea.Rotation);
+                checkBoxInvert.IsChecked = ConfigurationManager.Current.Invert;
 
 
-            //
-            // Force full area
-            //
-            if (config.ForceFullArea)
-            {
-                textTabletAreaWidth.IsEnabled = false;
-                textTabletAreaHeight.IsEnabled = false;
-                textTabletAreaX.IsEnabled = false;
-                textTabletAreaY.IsEnabled = false;
-            }
-            else
-            {
-                textTabletAreaWidth.IsEnabled = true;
-                textTabletAreaHeight.IsEnabled = true;
-                textTabletAreaX.IsEnabled = true;
-                textTabletAreaY.IsEnabled = true;
-            }
+                //
+                // Force full area
+                //
+                if (ConfigurationManager.Current.ForceFullArea)
+                {
+                    textTabletAreaWidth.IsEnabled = false;
+                    textTabletAreaHeight.IsEnabled = false;
+                    textTabletAreaX.IsEnabled = false;
+                    textTabletAreaY.IsEnabled = false;
+                }
+                else
+                {
+                    textTabletAreaWidth.IsEnabled = true;
+                    textTabletAreaHeight.IsEnabled = true;
+                    textTabletAreaX.IsEnabled = true;
+                    textTabletAreaY.IsEnabled = true;
+                }
 
 
-            //
-            // Screen area
-            //
-            textScreenAreaWidth.Text = Utils.GetNumberString(config.ScreenArea.Width, "0");
-            textScreenAreaHeight.Text = Utils.GetNumberString(config.ScreenArea.Height, "0");
-            textScreenAreaX.Text = Utils.GetNumberString(config.ScreenArea.X, "0");
-            textScreenAreaY.Text = Utils.GetNumberString(config.ScreenArea.Y, "0");
+                //
+                // Screen area
+                //
+                textScreenAreaWidth.Text = Utils.GetNumberString(ConfigurationManager.Current.ScreenArea.Width, "0");
+                textScreenAreaHeight.Text = Utils.GetNumberString(ConfigurationManager.Current.ScreenArea.Height, "0");
+                textScreenAreaX.Text = Utils.GetNumberString(ConfigurationManager.Current.ScreenArea.X, "0");
+                textScreenAreaY.Text = Utils.GetNumberString(ConfigurationManager.Current.ScreenArea.Y, "0");
 
 
-            //
-            // Desktop size
-            //
-            if (config.AutomaticDesktopSize)
-            {
-                textDesktopWidth.Text = Utils.GetNumberString(GetVirtualDesktopSize().Width);
-                textDesktopHeight.Text = Utils.GetNumberString(GetVirtualDesktopSize().Height);
-                config.DesktopSize.Width = GetVirtualDesktopSize().Width;
-                config.DesktopSize.Height = GetVirtualDesktopSize().Height;
-                textDesktopWidth.IsEnabled = false;
-                textDesktopHeight.IsEnabled = false;
-            }
-            else
-            {
-                textDesktopWidth.Text = Utils.GetNumberString(config.DesktopSize.Width);
-                textDesktopHeight.Text = Utils.GetNumberString(config.DesktopSize.Height);
-            }
-            checkBoxAutomaticDesktopSize.IsChecked = config.AutomaticDesktopSize;
+                //
+                // Desktop size
+                //
+                if (ConfigurationManager.Current.AutomaticDesktopSize)
+                {
+                    textDesktopWidth.Text = Utils.GetNumberString(GetVirtualDesktopSize().Width);
+                    textDesktopHeight.Text = Utils.GetNumberString(GetVirtualDesktopSize().Height);
+                    ConfigurationManager.Current.DesktopSize.Width = GetVirtualDesktopSize().Width;
+                    ConfigurationManager.Current.DesktopSize.Height = GetVirtualDesktopSize().Height;
+                    textDesktopWidth.IsEnabled = false;
+                    textDesktopHeight.IsEnabled = false;
+                }
+                else
+                {
+                    textDesktopWidth.Text = Utils.GetNumberString(ConfigurationManager.Current.DesktopSize.Width);
+                    textDesktopHeight.Text = Utils.GetNumberString(ConfigurationManager.Current.DesktopSize.Height);
+                }
+                checkBoxAutomaticDesktopSize.IsChecked = ConfigurationManager.Current.AutomaticDesktopSize;
 
 
-            // Force aspect ratio
-            if (config.ForceAspectRatio)
-            {
-                config.TabletArea.Height = config.TabletArea.Width / (config.ScreenArea.Width / config.ScreenArea.Height);
-                textTabletAreaHeight.Text = Utils.GetNumberString(config.TabletArea.Height);
-                textTabletAreaHeight.IsEnabled = false;
-            }
+                // Force aspect ratio
+                if (ConfigurationManager.Current.ForceAspectRatio)
+                {
+                    ConfigurationManager.Current.TabletArea.Height = ConfigurationManager.Current.TabletArea.Width / (ConfigurationManager.Current.ScreenArea.Width / ConfigurationManager.Current.ScreenArea.Height);
+                    textTabletAreaHeight.Text = Utils.GetNumberString(ConfigurationManager.Current.TabletArea.Height);
+                    textTabletAreaHeight.IsEnabled = false;
+                }
 
 
-            //
-            // Move tablet area to a valid position
-            //
-            config.TabletArea.MoveInside(config.TabletFullArea);
-            textTabletAreaX.Text = Utils.GetNumberString(config.TabletArea.X);
-            textTabletAreaY.Text = Utils.GetNumberString(config.TabletArea.Y);
+                //
+                // Move tablet area to a valid position
+                //
+                ConfigurationManager.Current.TabletArea.MoveInside(ConfigurationManager.Current.TabletFullArea);
+                textTabletAreaX.Text = Utils.GetNumberString(ConfigurationManager.Current.TabletArea.X);
+                textTabletAreaY.Text = Utils.GetNumberString(ConfigurationManager.Current.TabletArea.Y);
 
 
-            //
-            // Buttons
-            //
-            if (config.ButtonMap.Count() == 3)
-            {
-                comboBoxButton1.SelectedIndex = config.ButtonMap[0] == 8 ? 6 : config.ButtonMap[0];
-                comboBoxButton2.SelectedIndex = config.ButtonMap[1] == 7 ? 6 : config.ButtonMap[1];
-                comboBoxButton3.SelectedIndex = config.ButtonMap[2] == 6 ? 6 : config.ButtonMap[2];
-                extraTipEventBox.SelectedIndex = (int)config.ExtraButtonEvents[0];
-                extraBottomEventBox.SelectedIndex = (int)config.ExtraButtonEvents[1];
-                extraTopEventBox.SelectedIndex = (int)config.ExtraButtonEvents[2];
-            }
-            else
-            {
-                config.ButtonMap = new int[] { 1, 2, 3 };
-            }
-            checkBoxDisableButtons.IsChecked = config.DisableButtons;
+                //
+                // Buttons
+                //
+                if (ConfigurationManager.Current.ButtonMap.Count() == 3)
+                {
+                    comboBoxButton1.SelectedIndex = ConfigurationManager.Current.ButtonMap[0] == 8 ? 6 : ConfigurationManager.Current.ButtonMap[0];
+                    comboBoxButton2.SelectedIndex = ConfigurationManager.Current.ButtonMap[1] == 7 ? 6 : ConfigurationManager.Current.ButtonMap[1];
+                    comboBoxButton3.SelectedIndex = ConfigurationManager.Current.ButtonMap[2] == 6 ? 6 : ConfigurationManager.Current.ButtonMap[2];
+                    extraTipEventBox.SelectedIndex = (int)ConfigurationManager.Current.ExtraButtonEvents[0];
+                    extraBottomEventBox.SelectedIndex = (int)ConfigurationManager.Current.ExtraButtonEvents[1];
+                    extraTopEventBox.SelectedIndex = (int)ConfigurationManager.Current.ExtraButtonEvents[2];
+                }
+                else
+                {
+                    ConfigurationManager.Current.ButtonMap = new int[] { 1, 2, 3 };
+                }
+                checkBoxDisableButtons.IsChecked = ConfigurationManager.Current.DisableButtons;
 
 
-            //
-            // Smoothing filter
-            //
-            checkBoxSmoothing.IsChecked = config.SmoothingEnabled;
-            textSmoothingLatency.Text = Utils.GetNumberString(config.SmoothingLatency);
-            comboBoxSmoothingRate.SelectedIndex = config.SmoothingInterval - 2;
-            if (config.SmoothingEnabled)
-            {
-                textSmoothingLatency.IsEnabled = true;
-                comboBoxSmoothingRate.IsEnabled = true;
-            }
-            else
-            {
-                textSmoothingLatency.IsEnabled = false;
-                comboBoxSmoothingRate.IsEnabled = false;
-            }
+                //
+                // Smoothing filter
+                //
+                checkBoxSmoothing.IsChecked = ConfigurationManager.Current.SmoothingEnabled;
+                textSmoothingLatency.Text = Utils.GetNumberString(ConfigurationManager.Current.SmoothingLatency);
+                comboBoxSmoothingRate.SelectedIndex = ConfigurationManager.Current.SmoothingInterval - 2;
+                if (ConfigurationManager.Current.SmoothingEnabled)
+                {
+                    textSmoothingLatency.IsEnabled = true;
+                    comboBoxSmoothingRate.IsEnabled = true;
+                }
+                else
+                {
+                    textSmoothingLatency.IsEnabled = false;
+                    comboBoxSmoothingRate.IsEnabled = false;
+                }
 
-            //
-            // Run at startup
-            //
-            checkRunAtStartup.IsChecked = config.RunAtStartup;
-
-
-            //
-            // Custom commands
-            //
-            string tmp = "";
-            foreach (string command in config.CommandsBefore)
-            {
-                if (command.Trim().Length > 0)
-                    tmp += command.Trim() + "\n";
-            }
-            textCommandsBefore.Text = tmp;
-
-            tmp = "";
-            foreach (string command in config.CommandsAfter)
-            {
-                if (command.Trim().Length > 0)
-                    tmp += command.Trim() + "\n";
-            }
-            textCommandsAfter.Text = tmp;
+                //
+                // Run at startup
+                //
+                checkRunAtStartup.IsChecked = ConfigurationManager.Current.RunAtStartup;
 
 
-            // Update canvases
-            UpdateCanvasElements();
+                //
+                // Custom commands
+                //
+                string tmp = "";
+                foreach (string command in ConfigurationManager.Current.CommandsBefore)
+                {
+                    if (command.Trim().Length > 0)
+                        tmp += command.Trim() + "\n";
+                }
+                textCommandsBefore.Text = tmp;
+
+                tmp = "";
+                foreach (string command in ConfigurationManager.Current.CommandsAfter)
+                {
+                    if (command.Trim().Length > 0)
+                        tmp += command.Trim() + "\n";
+                }
+                textCommandsAfter.Text = tmp;
 
 
-            isLoadingSettings = false;
+                // Update canvases
+                UpdateCanvasElements();
 
-            extraTipEventBox.SelectionChanged += ExtraSelectionChanged;
-            extraBottomEventBox.SelectionChanged += ExtraSelectionChanged;
-            extraTopEventBox.SelectionChanged += ExtraSelectionChanged;
+
+                isLoadingSettings = false;
+
+                extraTipEventBox.SelectionChanged += ExtraSelectionChanged;
+                extraBottomEventBox.SelectionChanged += ExtraSelectionChanged;
+                extraTopEventBox.SelectionChanged += ExtraSelectionChanged;
+
+                UpdateTitle();
+            }));
         }
 
         //
@@ -561,101 +560,101 @@ namespace TabletDriverGUI
 
             // Tablet area
             if (Utils.ParseNumber(textTabletAreaWidth.Text, out double val))
-                config.TabletArea.Width = val;
+                ConfigurationManager.Current.TabletArea.Width = val;
             if (Utils.ParseNumber(textTabletAreaHeight.Text, out val))
-                config.TabletArea.Height = val;
+                ConfigurationManager.Current.TabletArea.Height = val;
             if (Utils.ParseNumber(textTabletAreaX.Text, out val))
-                config.TabletArea.X = val;
+                ConfigurationManager.Current.TabletArea.X = val;
             if (Utils.ParseNumber(textTabletAreaY.Text, out val))
-                config.TabletArea.Y = val;
+                ConfigurationManager.Current.TabletArea.Y = val;
             if (Utils.ParseNumber(textTabletAreaRotation.Text, out val))
-                config.TabletArea.Rotation = val;
+                ConfigurationManager.Current.TabletArea.Rotation = val;
 
-            config.Invert = (bool)checkBoxInvert.IsChecked;
-            config.ForceAspectRatio = (bool)checkBoxForceAspect.IsChecked;
-            config.ForceFullArea = (bool)checkBoxForceFullArea.IsChecked;
+            ConfigurationManager.Current.Invert = (bool)checkBoxInvert.IsChecked;
+            ConfigurationManager.Current.ForceAspectRatio = (bool)checkBoxForceAspect.IsChecked;
+            ConfigurationManager.Current.ForceFullArea = (bool)checkBoxForceFullArea.IsChecked;
 
             // Output Mode
-            if (radioModeAbsolute.IsChecked == true) config.OutputMode = Configuration.OutputModes.Absolute;
-            if (radioModeRelative.IsChecked == true) config.OutputMode = Configuration.OutputModes.Relative;
-            if (radioModeDigitizer.IsChecked == true) config.OutputMode = Configuration.OutputModes.Digitizer;
+            if (radioModeAbsolute.IsChecked == true) ConfigurationManager.Current.OutputMode = Configuration.OutputModes.Absolute;
+            if (radioModeRelative.IsChecked == true) ConfigurationManager.Current.OutputMode = Configuration.OutputModes.Relative;
+            if (radioModeDigitizer.IsChecked == true) ConfigurationManager.Current.OutputMode = Configuration.OutputModes.Digitizer;
 
 
             // Force full area
-            if (config.ForceFullArea)
+            if (ConfigurationManager.Current.ForceFullArea)
             {
                 // Set tablet area size to full area
-                config.TabletArea.Width = config.TabletFullArea.Width;
-                config.TabletArea.Height = config.TabletFullArea.Height;
+                ConfigurationManager.Current.TabletArea.Width = ConfigurationManager.Current.TabletFullArea.Width;
+                ConfigurationManager.Current.TabletArea.Height = ConfigurationManager.Current.TabletFullArea.Height;
 
                 // Force aspect
-                if (config.ForceAspectRatio)
-                    config.TabletArea.Height = config.TabletArea.Width / (config.ScreenArea.Width / config.ScreenArea.Height);
+                if (ConfigurationManager.Current.ForceAspectRatio)
+                    ConfigurationManager.Current.TabletArea.Height = ConfigurationManager.Current.TabletArea.Width / (ConfigurationManager.Current.ScreenArea.Width / ConfigurationManager.Current.ScreenArea.Height);
 
                 // Fit area to full area
-                config.TabletArea.ScaleInside(config.TabletFullArea);
+                ConfigurationManager.Current.TabletArea.ScaleInside(ConfigurationManager.Current.TabletFullArea);
 
-                textTabletAreaWidth.Text = Utils.GetNumberString(config.TabletArea.Width);
-                textTabletAreaHeight.Text = Utils.GetNumberString(config.TabletArea.Height);
+                textTabletAreaWidth.Text = Utils.GetNumberString(ConfigurationManager.Current.TabletArea.Width);
+                textTabletAreaHeight.Text = Utils.GetNumberString(ConfigurationManager.Current.TabletArea.Height);
 
             }
 
             // Force the tablet area to be inside of the full area
-            config.TabletArea.MoveInside(config.TabletFullArea);
+            ConfigurationManager.Current.TabletArea.MoveInside(ConfigurationManager.Current.TabletFullArea);
 
             // Screen area
             if (Utils.ParseNumber(textScreenAreaWidth.Text, out val))
-                config.ScreenArea.Width = val;
+                ConfigurationManager.Current.ScreenArea.Width = val;
             if (Utils.ParseNumber(textScreenAreaHeight.Text, out val))
-                config.ScreenArea.Height = val;
+                ConfigurationManager.Current.ScreenArea.Height = val;
             if (Utils.ParseNumber(textScreenAreaX.Text, out val))
-                config.ScreenArea.X = val;
+                ConfigurationManager.Current.ScreenArea.X = val;
             if (Utils.ParseNumber(textScreenAreaY.Text, out val))
-                config.ScreenArea.Y = val;
+                ConfigurationManager.Current.ScreenArea.Y = val;
 
 
             // Desktop size
             if (Utils.ParseNumber(textDesktopWidth.Text, out val))
-                config.DesktopSize.Width = val;
+                ConfigurationManager.Current.DesktopSize.Width = val;
             if (Utils.ParseNumber(textDesktopHeight.Text, out val))
-                config.DesktopSize.Height = val;
-            config.AutomaticDesktopSize = (bool)checkBoxAutomaticDesktopSize.IsChecked;
-            if (config.AutomaticDesktopSize == true)
+                ConfigurationManager.Current.DesktopSize.Height = val;
+            ConfigurationManager.Current.AutomaticDesktopSize = (bool)checkBoxAutomaticDesktopSize.IsChecked;
+            if (ConfigurationManager.Current.AutomaticDesktopSize == true)
             {
                 textDesktopWidth.Text = Utils.GetNumberString(GetVirtualDesktopSize().Width);
                 textDesktopHeight.Text = Utils.GetNumberString(GetVirtualDesktopSize().Height);
-                config.DesktopSize.Width = GetVirtualDesktopSize().Width;
-                config.DesktopSize.Height = GetVirtualDesktopSize().Height;
+                ConfigurationManager.Current.DesktopSize.Width = GetVirtualDesktopSize().Width;
+                ConfigurationManager.Current.DesktopSize.Height = GetVirtualDesktopSize().Height;
             }
 
 
             // Force aspect ratio
-            if (config.ForceAspectRatio)
+            if (ConfigurationManager.Current.ForceAspectRatio)
             {
-                config.TabletArea.Height = config.TabletArea.Width / (config.ScreenArea.Width / config.ScreenArea.Height);
-                textTabletAreaHeight.Text = Utils.GetNumberString(config.TabletArea.Height);
+                ConfigurationManager.Current.TabletArea.Height = ConfigurationManager.Current.TabletArea.Width / (ConfigurationManager.Current.ScreenArea.Width / ConfigurationManager.Current.ScreenArea.Height);
+                textTabletAreaHeight.Text = Utils.GetNumberString(ConfigurationManager.Current.TabletArea.Height);
             }
 
 
             // Button map 
-            config.ButtonMap[0] = comboBoxButton1.SelectedIndex == 6 ? 8 : comboBoxButton1.SelectedIndex;
-            config.ButtonMap[1] = comboBoxButton2.SelectedIndex == 6 ? 7 : comboBoxButton2.SelectedIndex;
-            config.ButtonMap[2] = comboBoxButton3.SelectedIndex == 6 ? 6 : comboBoxButton3.SelectedIndex;
-            config.DisableButtons = (bool)checkBoxDisableButtons.IsChecked;
-            config.ExtraButtonEvents[0] = (Configuration.ExtraEvents)extraTipEventBox.SelectedIndex;
-            config.ExtraButtonEvents[1] = (Configuration.ExtraEvents)extraBottomEventBox.SelectedIndex;
-            config.ExtraButtonEvents[2] = (Configuration.ExtraEvents)extraTopEventBox.SelectedIndex;
+            ConfigurationManager.Current.ButtonMap[0] = comboBoxButton1.SelectedIndex == 6 ? 8 : comboBoxButton1.SelectedIndex;
+            ConfigurationManager.Current.ButtonMap[1] = comboBoxButton2.SelectedIndex == 6 ? 7 : comboBoxButton2.SelectedIndex;
+            ConfigurationManager.Current.ButtonMap[2] = comboBoxButton3.SelectedIndex == 6 ? 6 : comboBoxButton3.SelectedIndex;
+            ConfigurationManager.Current.DisableButtons = (bool)checkBoxDisableButtons.IsChecked;
+            ConfigurationManager.Current.ExtraButtonEvents[0] = (Configuration.ExtraEvents)extraTipEventBox.SelectedIndex;
+            ConfigurationManager.Current.ExtraButtonEvents[1] = (Configuration.ExtraEvents)extraBottomEventBox.SelectedIndex;
+            ConfigurationManager.Current.ExtraButtonEvents[2] = (Configuration.ExtraEvents)extraTopEventBox.SelectedIndex;
 
-            int.TryParse(textDesktopWidth.Text, out config.DesktopWidth);
-            int.TryParse(textDesktopHeight.Text, out config.DesktopHeight);
+            int.TryParse(textDesktopWidth.Text, out ConfigurationManager.Current.DesktopWidth);
+            int.TryParse(textDesktopHeight.Text, out ConfigurationManager.Current.DesktopHeight);
 
             // Filter
-            config.SmoothingEnabled = (bool)checkBoxSmoothing.IsChecked;
-            config.SmoothingInterval = comboBoxSmoothingRate.SelectedIndex + 2;
+            ConfigurationManager.Current.SmoothingEnabled = (bool)checkBoxSmoothing.IsChecked;
+            ConfigurationManager.Current.SmoothingInterval = comboBoxSmoothingRate.SelectedIndex + 2;
             if (Utils.ParseNumber(textSmoothingLatency.Text, out val))
-                config.SmoothingLatency = val;
+                ConfigurationManager.Current.SmoothingLatency = val;
 
-            if (config.SmoothingEnabled)
+            if (ConfigurationManager.Current.SmoothingEnabled)
             {
                 textSmoothingLatency.IsEnabled = true;
                 comboBoxSmoothingRate.IsEnabled = true;
@@ -669,10 +668,10 @@ namespace TabletDriverGUI
             //
             // Run at startup
             //
-            oldValue = config.RunAtStartup;
-            config.RunAtStartup = (bool)checkRunAtStartup.IsChecked;
-            if (config.RunAtStartup != oldValue)
-                SetRunAtStartup(config.RunAtStartup);
+            oldValue = ConfigurationManager.Current.RunAtStartup;
+            ConfigurationManager.Current.RunAtStartup = (bool)checkRunAtStartup.IsChecked;
+            if (ConfigurationManager.Current.RunAtStartup != oldValue)
+                SetRunAtStartup(ConfigurationManager.Current.RunAtStartup);
 
 
             // Custom commands
@@ -680,13 +679,13 @@ namespace TabletDriverGUI
             foreach (string command in textCommandsBefore.Text.Split('\n'))
                 if (command.Trim().Length > 0)
                     commandList.Add(command.Trim());
-            config.CommandsBefore = commandList.ToArray();
+            ConfigurationManager.Current.CommandsBefore = commandList.ToArray();
 
             commandList.Clear();
             foreach (string command in textCommandsAfter.Text.Split('\n'))
                 if (command.Trim().Length > 0)
                     commandList.Add(command.Trim());
-            config.CommandsAfter = commandList.ToArray();
+            ConfigurationManager.Current.CommandsAfter = commandList.ToArray();
 
 
 
@@ -719,12 +718,12 @@ namespace TabletDriverGUI
         //
         // Get desktop size
         //
-        System.Drawing.Rectangle GetVirtualDesktopSize()
+        public static System.Drawing.Rectangle GetVirtualDesktopSize()
         {
             System.Drawing.Rectangle rect = new System.Drawing.Rectangle();
 
             // Windows 8 or greater needed for the multiscreen absolute mode
-            if (VersionHelper.IsWindows8OrGreater() || config.OutputMode == Configuration.OutputModes.Digitizer)
+            if (VersionHelper.IsWindows8OrGreater() || ConfigurationManager.Current.OutputMode == Configuration.OutputModes.Digitizer)
             {
                 rect.Width = System.Windows.Forms.SystemInformation.VirtualScreen.Width;
                 rect.Height = System.Windows.Forms.SystemInformation.VirtualScreen.Height;
@@ -747,7 +746,7 @@ namespace TabletDriverGUI
             System.Windows.Forms.Screen[] screens;
 
             // Windows 8 or greater needed for the multiscreen absolute mode
-            if (VersionHelper.IsWindows8OrGreater() || config.OutputMode == Configuration.OutputModes.Digitizer)
+            if (VersionHelper.IsWindows8OrGreater() || ConfigurationManager.Current.OutputMode == Configuration.OutputModes.Digitizer)
                 screens = System.Windows.Forms.Screen.AllScreens;
             else
                 screens = new System.Windows.Forms.Screen[] { System.Windows.Forms.Screen.PrimaryScreen };
@@ -920,40 +919,40 @@ namespace TabletDriverGUI
         void UpdateScreenMapCanvas()
         {
             // Canvas element scaling
-            double scaleX = (canvasScreenMap.ActualWidth - 2) / config.DesktopSize.Width;
-            double scaleY = (canvasScreenMap.ActualHeight - 2) / config.DesktopSize.Height;
+            double scaleX = (canvasScreenMap.ActualWidth - 2) / ConfigurationManager.Current.DesktopSize.Width;
+            double scaleY = (canvasScreenMap.ActualHeight - 2) / ConfigurationManager.Current.DesktopSize.Height;
             double scale = scaleX;
             if (scaleX > scaleY)
                 scale = scaleY;
 
             // Centered offset
-            double offsetX = canvasScreenMap.ActualWidth / 2.0 - config.DesktopSize.Width * scale / 2.0;
-            double offsetY = canvasScreenMap.ActualHeight / 2.0 - config.DesktopSize.Height * scale / 2.0;
+            double offsetX = canvasScreenMap.ActualWidth / 2.0 - ConfigurationManager.Current.DesktopSize.Width * scale / 2.0;
+            double offsetY = canvasScreenMap.ActualHeight / 2.0 - ConfigurationManager.Current.DesktopSize.Height * scale / 2.0;
 
 
             // Full desktop area
-            rectangleDesktop.Width = config.DesktopSize.Width * scale;
-            rectangleDesktop.Height = config.DesktopSize.Height * scale;
+            rectangleDesktop.Width = ConfigurationManager.Current.DesktopSize.Width * scale;
+            rectangleDesktop.Height = ConfigurationManager.Current.DesktopSize.Height * scale;
             Canvas.SetLeft(rectangleDesktop, offsetX);
             Canvas.SetTop(rectangleDesktop, offsetY);
 
 
             // Screen map area
-            rectangleScreenMap.Width = config.ScreenArea.Width * scale;
-            rectangleScreenMap.Height = config.ScreenArea.Height * scale;
-            Canvas.SetLeft(rectangleScreenMap, offsetX + config.ScreenArea.X * scale);
-            Canvas.SetTop(rectangleScreenMap, offsetY + config.ScreenArea.Y * scale);
+            rectangleScreenMap.Width = ConfigurationManager.Current.ScreenArea.Width * scale;
+            rectangleScreenMap.Height = ConfigurationManager.Current.ScreenArea.Height * scale;
+            Canvas.SetLeft(rectangleScreenMap, offsetX + ConfigurationManager.Current.ScreenArea.X * scale);
+            Canvas.SetTop(rectangleScreenMap, offsetY + ConfigurationManager.Current.ScreenArea.Y * scale);
 
             // Screen aspect ratio text
-            textScreenAspectRatio.Text = Utils.GetNumberString(config.ScreenArea.Width / config.ScreenArea.Height, "0.###") + ":1";
+            textScreenAspectRatio.Text = Utils.GetNumberString(ConfigurationManager.Current.ScreenArea.Width / ConfigurationManager.Current.ScreenArea.Height, "0.###") + ":1";
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 Canvas.SetLeft(textScreenAspectRatio, offsetX +
-                              (config.ScreenArea.X + config.ScreenArea.Width / 2.0) * scale -
+                              (ConfigurationManager.Current.ScreenArea.X + ConfigurationManager.Current.ScreenArea.Width / 2.0) * scale -
                               textScreenAspectRatio.ActualWidth / 2.0
                           );
                 Canvas.SetTop(textScreenAspectRatio, offsetY +
-                    (config.ScreenArea.Y + config.ScreenArea.Height / 2.0) * scale -
+                    (ConfigurationManager.Current.ScreenArea.Y + ConfigurationManager.Current.ScreenArea.Height / 2.0) * scale -
                     textScreenAspectRatio.ActualHeight / 2.0
                 );
             }));
@@ -1000,8 +999,8 @@ namespace TabletDriverGUI
         //
         void UpdateTabletAreaCanvas()
         {
-            double fullWidth = config.TabletFullArea.Width;
-            double fullHeight = config.TabletFullArea.Height;
+            double fullWidth = ConfigurationManager.Current.TabletFullArea.Width;
+            double fullHeight = ConfigurationManager.Current.TabletFullArea.Height;
 
             // Canvas element scaling
             double scaleX = (canvasTabletArea.ActualWidth - 2) / fullWidth;
@@ -1017,14 +1016,14 @@ namespace TabletDriverGUI
             //
             // Tablet full area
             //
-            Point[] corners = config.TabletFullArea.Corners;
+            Point[] corners = ConfigurationManager.Current.TabletFullArea.Corners;
             for (int i = 0; i < 4; i++)
             {
                 Point p = corners[i];
                 p.X *= scale;
                 p.Y *= scale;
-                p.X += config.TabletFullArea.X * scale + offsetX;
-                p.Y += config.TabletFullArea.Y * scale + offsetY;
+                p.X += ConfigurationManager.Current.TabletFullArea.X * scale + offsetX;
+                p.Y += ConfigurationManager.Current.TabletFullArea.Y * scale + offsetY;
                 polygonTabletFullArea.Points[i] = p;
             }
 
@@ -1032,14 +1031,14 @@ namespace TabletDriverGUI
             //
             // Tablet area
             //
-            corners = config.TabletArea.Corners;
+            corners = ConfigurationManager.Current.TabletArea.Corners;
             for (int i = 0; i < 4; i++)
             {
                 Point p = corners[i];
                 p.X *= scale;
                 p.Y *= scale;
-                p.X += config.TabletArea.X * scale + offsetX;
-                p.Y += config.TabletArea.Y * scale + offsetY;
+                p.X += ConfigurationManager.Current.TabletArea.X * scale + offsetX;
+                p.Y += ConfigurationManager.Current.TabletArea.Y * scale + offsetY;
                 polygonTabletArea.Points[i] = p;
             }
 
@@ -1047,29 +1046,29 @@ namespace TabletDriverGUI
             // Tablet area arrow
             //
             polygonTabletAreaArrow.Points[0] = new Point(
-                offsetX + config.TabletArea.X * scale,
-                offsetY + config.TabletArea.Y * scale
+                offsetX + ConfigurationManager.Current.TabletArea.X * scale,
+                offsetY + ConfigurationManager.Current.TabletArea.Y * scale
             );
 
             polygonTabletAreaArrow.Points[1] = new Point(
-                offsetX + corners[2].X * scale + config.TabletArea.X * scale,
-                offsetY + corners[2].Y * scale + config.TabletArea.Y * scale
+                offsetX + corners[2].X * scale + ConfigurationManager.Current.TabletArea.X * scale,
+                offsetY + corners[2].Y * scale + ConfigurationManager.Current.TabletArea.Y * scale
             );
 
             polygonTabletAreaArrow.Points[2] = new Point(
-                offsetX + corners[3].X * scale + config.TabletArea.X * scale,
-                offsetY + corners[3].Y * scale + config.TabletArea.Y * scale
+                offsetX + corners[3].X * scale + ConfigurationManager.Current.TabletArea.X * scale,
+                offsetY + corners[3].Y * scale + ConfigurationManager.Current.TabletArea.Y * scale
             );
 
 
             //
             // Tablet area aspect ratio text
             //
-            textTabletAspectRatio.Text = Utils.GetNumberString(config.TabletArea.Width / config.TabletArea.Height, "0.###") + ":1";
+            textTabletAspectRatio.Text = Utils.GetNumberString(ConfigurationManager.Current.TabletArea.Width / ConfigurationManager.Current.TabletArea.Height, "0.###") + ":1";
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                Canvas.SetLeft(textTabletAspectRatio, offsetX + (config.TabletArea.X) * scale - textTabletAspectRatio.ActualWidth / 2.0);
-                Canvas.SetTop(textTabletAspectRatio, offsetY + (config.TabletArea.Y) * scale - textTabletAspectRatio.ActualHeight / 2.0);
+                Canvas.SetLeft(textTabletAspectRatio, offsetX + (ConfigurationManager.Current.TabletArea.X) * scale - textTabletAspectRatio.ActualWidth / 2.0);
+                Canvas.SetTop(textTabletAspectRatio, offsetY + (ConfigurationManager.Current.TabletArea.Y) * scale - textTabletAspectRatio.ActualHeight / 2.0);
             }));
 
         }
@@ -1095,14 +1094,14 @@ namespace TabletDriverGUI
                 // Reset monitor selection
                 comboBoxMonitor.SelectedIndex = -1;
 
-                mouseDrag.OriginDraggable = new Point(config.ScreenArea.X, config.ScreenArea.Y);
+                mouseDrag.OriginDraggable = new Point(ConfigurationManager.Current.ScreenArea.X, ConfigurationManager.Current.ScreenArea.Y);
                 canvasScreenMap.CaptureMouse();
             }
 
             // Tablet Area
             else if (mouseDrag.Source == canvasTabletArea)
             {
-                mouseDrag.OriginDraggable = new Point(config.TabletArea.X, config.TabletArea.Y);
+                mouseDrag.OriginDraggable = new Point(ConfigurationManager.Current.TabletArea.X, ConfigurationManager.Current.TabletArea.Y);
                 canvasTabletArea.CaptureMouse();
             }
         }
@@ -1113,10 +1112,10 @@ namespace TabletDriverGUI
             mouseDrag.IsMouseDown = false;
             LoadSettingsFromConfiguration();
             isLoadingSettings = true;
-            textScreenAreaX.Text = Utils.GetNumberString(config.ScreenArea.X, "0");
-            textScreenAreaY.Text = Utils.GetNumberString(config.ScreenArea.Y, "0");
-            textTabletAreaX.Text = Utils.GetNumberString(config.TabletArea.X);
-            textTabletAreaY.Text = Utils.GetNumberString(config.TabletArea.Y);
+            textScreenAreaX.Text = Utils.GetNumberString(ConfigurationManager.Current.ScreenArea.X, "0");
+            textScreenAreaY.Text = Utils.GetNumberString(ConfigurationManager.Current.ScreenArea.Y, "0");
+            textTabletAreaX.Text = Utils.GetNumberString(ConfigurationManager.Current.TabletArea.X);
+            textTabletAreaY.Text = Utils.GetNumberString(ConfigurationManager.Current.TabletArea.Y);
             isLoadingSettings = false;
             canvasScreenMap.ReleaseMouseCapture();
             canvasTabletArea.ReleaseMouseCapture();
@@ -1145,28 +1144,28 @@ namespace TabletDriverGUI
                 // Screen map canvas
                 if (mouseDrag.Source == canvasScreenMap)
                 {
-                    scaleX = config.DesktopSize.Width / canvasScreenMap.ActualWidth;
-                    scaleY = config.DesktopSize.Height / canvasScreenMap.ActualHeight;
+                    scaleX = ConfigurationManager.Current.DesktopSize.Width / canvasScreenMap.ActualWidth;
+                    scaleY = ConfigurationManager.Current.DesktopSize.Height / canvasScreenMap.ActualHeight;
                     scale = scaleY;
                     if (scaleX > scaleY)
                         scale = scaleX;
 
-                    config.ScreenArea.X = mouseDrag.OriginDraggable.X + dx * scale;
-                    config.ScreenArea.Y = mouseDrag.OriginDraggable.Y + dy * scale;
+                    ConfigurationManager.Current.ScreenArea.X = mouseDrag.OriginDraggable.X + dx * scale;
+                    ConfigurationManager.Current.ScreenArea.Y = mouseDrag.OriginDraggable.Y + dy * scale;
                     UpdateScreenMapCanvas();
                 }
 
                 // Tablet area canvas
                 else if (mouseDrag.Source == canvasTabletArea)
                 {
-                    scaleX = config.TabletFullArea.Width / canvasTabletArea.ActualWidth;
-                    scaleY = config.TabletFullArea.Height / canvasTabletArea.ActualHeight;
+                    scaleX = ConfigurationManager.Current.TabletFullArea.Width / canvasTabletArea.ActualWidth;
+                    scaleY = ConfigurationManager.Current.TabletFullArea.Height / canvasTabletArea.ActualHeight;
                     scale = scaleY;
                     if (scaleX > scaleY)
                         scale = scaleX;
 
-                    config.TabletArea.X = mouseDrag.OriginDraggable.X + dx * scale;
-                    config.TabletArea.Y = mouseDrag.OriginDraggable.Y + dy * scale;
+                    ConfigurationManager.Current.TabletArea.X = mouseDrag.OriginDraggable.X + dx * scale;
+                    ConfigurationManager.Current.TabletArea.Y = mouseDrag.OriginDraggable.Y + dy * scale;
 
                     UpdateTabletAreaCanvas();
                 }
@@ -1282,9 +1281,9 @@ namespace TabletDriverGUI
                         break;
                     }
             }
-            if (c == extraTipEventBox) { config.ExtraButtonEvents[0] = extra; config.ExtraButtonEventTag[0] = tag; }
-            else if (c == extraBottomEventBox) { config.ExtraButtonEvents[1] = extra; config.ExtraButtonEventTag[1] = tag; }
-            else if (c == extraTopEventBox) { config.ExtraButtonEvents[2] = extra; config.ExtraButtonEventTag[2] = tag; }
+            if (c == extraTipEventBox) { ConfigurationManager.Current.ExtraButtonEvents[0] = extra; ConfigurationManager.Current.ExtraButtonEventTag[0] = tag; }
+            else if (c == extraBottomEventBox) { ConfigurationManager.Current.ExtraButtonEvents[1] = extra; ConfigurationManager.Current.ExtraButtonEventTag[1] = tag; }
+            else if (c == extraTopEventBox) { ConfigurationManager.Current.ExtraButtonEvents[2] = extra; ConfigurationManager.Current.ExtraButtonEventTag[2] = tag; }
             UpdateSettingsToConfiguration();
         }
 
@@ -1294,8 +1293,8 @@ namespace TabletDriverGUI
             if (!IsLoaded || isLoadingSettings) return;
             if (WindowState != WindowState.Maximized)
             {
-                config.WindowWidth = (int)e.NewSize.Width;
-                config.WindowHeight = (int)e.NewSize.Height;
+                ConfigurationManager.Current.WindowWidth = (int)e.NewSize.Width;
+                ConfigurationManager.Current.WindowHeight = (int)e.NewSize.Height;
             }
         }
 
@@ -1342,8 +1341,8 @@ namespace TabletDriverGUI
             {
                 textScreenAreaX.Text = "0";
                 textScreenAreaY.Text = "0";
-                textScreenAreaWidth.Text = Utils.GetNumberString(config.DesktopSize.Width);
-                textScreenAreaHeight.Text = Utils.GetNumberString(config.DesktopSize.Height);
+                textScreenAreaWidth.Text = Utils.GetNumberString(ConfigurationManager.Current.DesktopSize.Width);
+                textScreenAreaHeight.Text = Utils.GetNumberString(ConfigurationManager.Current.DesktopSize.Height);
             }
             else if (index > 0)
             {
@@ -1366,8 +1365,8 @@ namespace TabletDriverGUI
         {
             try
             {
-                config.Write();
-                config.SendToDriver(driver);
+                ConfigurationManager.Current.Write();
+                ConfigurationManager.Current.SendToDriver(driver);
                 SetStatus("Settings saved!");
             }
             catch (Exception)
@@ -1385,7 +1384,7 @@ namespace TabletDriverGUI
         //
         private void ApplySettings(object sender, RoutedEventArgs e)
         {
-            config.SendToDriver(driver);
+            ConfigurationManager.Current.SendToDriver(driver);
             SetStatus("Settings applied!");
         }
 
@@ -1408,8 +1407,8 @@ namespace TabletDriverGUI
                 {
                     try
                     {
-                        Configuration tmpConfig = Configuration.CreateFromFile(dialog.FileName);
-                        config = tmpConfig;
+                        File.Copy(dialog.FileName, Configuration.DefaultConfigFilename);
+                        ConfigurationManager.ReloadConfigFiles();
                         LoadSettingsFromConfiguration();
                         SetStatus("Settings imported!");
                     }
@@ -1437,7 +1436,7 @@ namespace TabletDriverGUI
                     try
                     {
                         UpdateSettingsToConfiguration();
-                        config.Write(dialog.FileName);
+                        ConfigurationManager.Current.Write(dialog.FileName);
                         SetStatus("Settings exported!");
                     }
                     catch (Exception)
@@ -1560,7 +1559,7 @@ namespace TabletDriverGUI
             }
             driver.SendCommand("Echo");
             driver.SendCommand("CheckTablet");
-            config.SendToDriver(driver);
+            ConfigurationManager.Current.SendToDriver(driver);
             driver.SendCommand("Info");
             driver.SendCommand("Start");
             driver.SendCommand("Log Off");
@@ -1592,13 +1591,14 @@ namespace TabletDriverGUI
         {
             if (running)
             {
-                driver.Start(config.DriverPath, config.DriverArguments);
+                driver.Start(ConfigurationManager.Current.DriverPath, ConfigurationManager.Current.DriverArguments);
             }
             timerRestart.Stop();
         }
 
 
 
+        string TabletName;
         //
         // Parse driver status messages
         //
@@ -1619,18 +1619,8 @@ namespace TabletDriverGUI
             //
             if (variableName == "tablet")
             {
-                string title = "TabletDriverGUI - " + stringValue;
-                Title = title;
-
-                // Limit notify icon text length
-                if (title.Length > 63)
-                {
-                    notifyIcon.Text = title.Substring(0, 63);
-                }
-                else
-                {
-                    notifyIcon.Text = title;
-                }
+                TabletName = stringValue;
+                UpdateTitle();
                 SetStatus("Connected to " + stringValue);
             }
 
@@ -1641,12 +1631,12 @@ namespace TabletDriverGUI
             {
                 if (Utils.ParseNumber(stringValue, out double val))
                 {
-                    config.TabletFullArea.Width = val;
-                    config.TabletFullArea.X = val / 2.0;
+                    ConfigurationManager.Current.TabletFullArea.Width = val;
+                    ConfigurationManager.Current.TabletFullArea.X = val / 2.0;
                     LoadSettingsFromConfiguration();
                     UpdateSettingsToConfiguration();
-                    if (isFirstStart)
-                        config.SendToDriver(driver);
+                    if (ConfigurationManager.isFirstStart)
+                        ConfigurationManager.Current.SendToDriver(driver);
                 }
             }
 
@@ -1657,14 +1647,30 @@ namespace TabletDriverGUI
             {
                 if (Utils.ParseNumber(stringValue, out double val))
                 {
-                    config.TabletFullArea.Height = val;
-                    config.TabletFullArea.Y = val / 2.0;
+                    ConfigurationManager.Current.TabletFullArea.Height = val;
+                    ConfigurationManager.Current.TabletFullArea.Y = val / 2.0;
                     LoadSettingsFromConfiguration();
                     UpdateSettingsToConfiguration();
-                    if (isFirstStart)
-                        config.SendToDriver(driver);
+                    if (ConfigurationManager.isFirstStart)
+                        ConfigurationManager.Current.SendToDriver(driver);
 
                 }
+            }
+        }
+
+        private void UpdateTitle()
+        {
+            string title = "TabletDriverGUI - " + TabletName + " - " + ConfigurationManager.Current.ConfigFilename;
+            Title = title;
+
+            // Limit notify icon text length
+            if (title.Length > 63)
+            {
+                notifyIcon.Text = title.Substring(0, 63);
+            }
+            else
+            {
+                notifyIcon.Text = title;
             }
         }
 
@@ -1684,7 +1690,7 @@ namespace TabletDriverGUI
                 // Console timer
                 timerConsoleUpdate.Start();
 
-                driver.Start(config.DriverPath, config.DriverArguments);
+                driver.Start(ConfigurationManager.Current.DriverPath, ConfigurationManager.Current.DriverArguments);
                 if (!driver.IsRunning)
                 {
                     SetStatus("Can't start the driver! Check the console!");
@@ -2053,11 +2059,11 @@ namespace TabletDriverGUI
         private void ButtonWacomArea_Click(object sender, RoutedEventArgs e)
         {
             WacomArea wacom = new WacomArea();
-            wacom.textWacomLeft.Text = Utils.GetNumberString((config.TabletArea.X - config.TabletArea.Width / 2) * 100.0, "0");
-            wacom.textWacomRight.Text = Utils.GetNumberString((config.TabletArea.X + config.TabletArea.Width / 2) * 100.0, "0");
+            wacom.textWacomLeft.Text = Utils.GetNumberString((ConfigurationManager.Current.TabletArea.X - ConfigurationManager.Current.TabletArea.Width / 2) * 100.0, "0");
+            wacom.textWacomRight.Text = Utils.GetNumberString((ConfigurationManager.Current.TabletArea.X + ConfigurationManager.Current.TabletArea.Width / 2) * 100.0, "0");
 
-            wacom.textWacomTop.Text = Utils.GetNumberString((config.TabletArea.Y - config.TabletArea.Height / 2) * 100.0, "0");
-            wacom.textWacomBottom.Text = Utils.GetNumberString((config.TabletArea.Y + config.TabletArea.Height / 2) * 100.0, "0");
+            wacom.textWacomTop.Text = Utils.GetNumberString((ConfigurationManager.Current.TabletArea.Y - ConfigurationManager.Current.TabletArea.Height / 2) * 100.0, "0");
+            wacom.textWacomBottom.Text = Utils.GetNumberString((ConfigurationManager.Current.TabletArea.Y + ConfigurationManager.Current.TabletArea.Height / 2) * 100.0, "0");
 
             wacom.ShowDialog();
 
@@ -2074,12 +2080,12 @@ namespace TabletDriverGUI
                     double width, height;
                     width = right - left;
                     height = bottom - top;
-                    config.ForceAspectRatio = false;
-                    config.ForceFullArea = false;
-                    config.TabletArea.X = (left + width / 2.0) / 100.0;
-                    config.TabletArea.Y = (top + height / 2.0) / 100.0;
-                    config.TabletArea.Width = width / 100.0;
-                    config.TabletArea.Height = height / 100.0;
+                    ConfigurationManager.Current.ForceAspectRatio = false;
+                    ConfigurationManager.Current.ForceFullArea = false;
+                    ConfigurationManager.Current.TabletArea.X = (left + width / 2.0) / 100.0;
+                    ConfigurationManager.Current.TabletArea.Y = (top + height / 2.0) / 100.0;
+                    ConfigurationManager.Current.TabletArea.Width = width / 100.0;
+                    ConfigurationManager.Current.TabletArea.Height = height / 100.0;
                     LoadSettingsFromConfiguration();
                 }
                 else
@@ -2136,6 +2142,11 @@ namespace TabletDriverGUI
         private void canvasLoaded(object sender, RoutedEventArgs e)
         {
             UpdateCanvasElements();
+        }
+
+        private void Window_Activated(object sender, EventArgs e)
+        {
+
         }
     }
 }

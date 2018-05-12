@@ -31,6 +31,7 @@ namespace TabletDriverGUI
         }
 
         public int ConfigVersion = 1;
+        public string EffectiveConditions = "";
 
         public Area TabletArea = new Area(80, 45, 40, 22.5);
         public Area TabletFullArea = new Area(100, 50, 50, 25);
@@ -80,7 +81,7 @@ namespace TabletDriverGUI
 
         public bool DeveloperMode = false;
         public static string DefaultConfigFilename = "config/config.xml";
-        private string configFilename = DefaultConfigFilename;
+        public string ConfigFilename = DefaultConfigFilename;
 
 
         //
@@ -200,7 +201,7 @@ namespace TabletDriverGUI
 
         public void Write()
         {
-            Write(configFilename);
+            Write(ConfigFilename);
         }
 
         public void Write(string filename)
