@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:TabletDriverGUI.ExtraButtonConfig"
         xmlns:System="clr-namespace:System;assembly=mscorlib" x:Class="TabletDriverGUI.ExtraButtonConfig.Keyboard"
         mc:Ignorable="d"
-        Title="Keyboard" Height="250" Width="400">
+        Title="Keyboard" Height="250" Width="400" WindowStartupLocation="CenterScreen">
     <Grid>
         <ListBox x:Name="list" HorizontalAlignment="Left" Margin="10,10,0,10" Width="100" SelectionChanged="list_SelectionChanged"/>
         <ComboBox x:Name="combo" Margin="115,10,9.6,0" VerticalAlignment="Top" SelectedIndex="0">

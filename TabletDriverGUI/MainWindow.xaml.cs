@@ -216,6 +216,7 @@ namespace TabletDriverGUI
             isLoadingSettings = false;
 
             ConfigurationManager.ConfigurationChanged += () => LoadSettingsFromConfiguration();
+            ConfigurationManager.ConfigurationChanged += () => driver.SendCommand("status");
         }
 
 
@@ -241,7 +242,7 @@ namespace TabletDriverGUI
         {
 
             // Load configuration
-            if (ConfigurationManager.isFirstStart)
+            if (ConfigurationManager.Current.isFirstStart)
             {
                 driver.ConsoleAddText("New config created!");
             }
@@ -1635,8 +1636,8 @@ namespace TabletDriverGUI
                     ConfigurationManager.Current.TabletFullArea.X = val / 2.0;
                     LoadSettingsFromConfiguration();
                     UpdateSettingsToConfiguration();
-                    if (ConfigurationManager.isFirstStart)
-                        ConfigurationManager.Current.SendToDriver(driver);
+                    //if (ConfigurationManager.Current.isFirstStart)
+                    ConfigurationManager.Current.SendToDriver(driver);
                 }
             }
 
@@ -1651,8 +1652,8 @@ namespace TabletDriverGUI
                     ConfigurationManager.Current.TabletFullArea.Y = val / 2.0;
                     LoadSettingsFromConfiguration();
                     UpdateSettingsToConfiguration();
-                    if (ConfigurationManager.isFirstStart)
-                        ConfigurationManager.Current.SendToDriver(driver);
+                    //if (ConfigurationManager.Current.isFirstStart)
+                    ConfigurationManager.Current.SendToDriver(driver);
 
                 }
             }
@@ -2148,5 +2149,136 @@ namespace TabletDriverGUI
         {
 
         }
+
+        #region profile
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            ConfigurationManager.ReloadConfigFiles();
+            SyncProfilesList();
+        }
+
+        private void SyncProfilesList()
+        {
+            profilesList.Items.Clear();
+            ecList.Items.Clear();
+            foreach (Configuration c in ConfigurationManager.Configurations)
+            {
+                profilesList.Items.Add(c);
+            }
+            profilesList.Items.Refresh();
+        }
+
+        private void profilesList_Loaded(object sender, RoutedEventArgs e)
+        {
+            SyncProfilesList();
+        }
+
+        private void profilesList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (profilesList.SelectedIndex == -1) return;
+            Configuration c = ConfigurationManager.Configurations[profilesList.SelectedIndex];
+            LoadEC(c);
+        }
+
+        private void LoadEC(Configuration c)
+        {
+            string[] s = c.EffectiveConditions.Split('|');
+            ecList.Items.Clear();
+            foreach (string st in s)
+            {
+                if (st.Trim() != "")
+                    ecList.Items.Add(new Configuration.EffectiveCondition(st));
+            }
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            if (ecList.SelectedIndex < 0) return;
+            new EffectiveConditionEditor(ecList.SelectedItem as Configuration.EffectiveCondition).ShowDialog();
+            Configuration c = ConfigurationManager.Configurations[profilesList.SelectedIndex];
+            SaveEC(c);
+            LoadEC(c);
+            SaveProfile();
+        }
+
+        private void SaveEC(Configuration c)
+        {
+            string b = "";
+            foreach (object o in ecList.Items)
+            {
+                b += (o as Configuration.EffectiveCondition).ToFormattedString() + "|";
+            }
+            c.EffectiveConditions = b == "" ? "" : b.Substring(0, b.Length - 1);
+        }
+
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            var v = new Configuration.EffectiveCondition();
+            ecList.Items.Add(v);
+            ecList.SelectedItem = v;
+            Button_Click_1(sender, e);
+        }
+
+        private void Button_Click_3(object sender, RoutedEventArgs e)
+        {
+            if (ecList.SelectedIndex < 0) return;
+            ecList.Items.RemoveAt(ecList.SelectedIndex);
+            Configuration c = ConfigurationManager.Configurations[profilesList.SelectedIndex];
+            SaveEC(c);
+            SaveProfile();
+        }
+
+        private void SaveProfile()
+        {
+            Configuration c = ConfigurationManager.Configurations[profilesList.SelectedIndex];
+            c.Write();
+        }
+
+        private void CheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            ConfigurationManager.Pause = (sender as CheckBox).IsChecked == true;
+        }
+
+        private void profileLoad_Click(object sender, RoutedEventArgs e)
+        {
+            if (profilesList.SelectedIndex < 0) return;
+            ConfigurationManager.QuestConfiguration(profilesList.SelectedIndex);
+            LoadSettingsFromConfiguration();
+            ConfigurationManager.Current.SendToDriver(driver);
+        }
+
+        private void profileNew_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.InitialDirectory = (Environment.CurrentDirectory + "/" + ConfigurationManager.DefaultConfigPath).Replace('/', '\\');
+            saveFileDialog.Filter = "eXtensible Markup Language|*.xml";
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                Configuration c = new Configuration() { isFirstStart = true };
+                System.Drawing.Rectangle r = MainWindow.GetVirtualDesktopSize();
+                c.DesktopWidth = r.Width;
+                c.DesktopHeight = r.Height;
+                c.DesktopSize.Width = r.Width;
+                c.DesktopSize.Height = r.Height;
+                c.ScreenArea.Width = c.DesktopSize.Width;
+                c.ScreenArea.Height = c.DesktopSize.Height;
+                c.ScreenArea.X = 0;
+                c.ScreenArea.Y = 0;
+                string f = saveFileDialog.FileName;
+                c.ConfigFilename = "config/" + f.Split('\\').Last();
+                c.Write();
+                Button_Click(sender, e);
+            }
+        }
+
+        private void profileDelete_Click(object sender, RoutedEventArgs e)
+        {
+            File.Delete(profilesList.SelectedItem.ToString());
+            Button_Click(sender, e);
+        }
+
+        #endregion
+
     }
 }

@@ -50,6 +50,7 @@
     <WarningLevel>4</WarningLevel>
     <DebugSymbols>true</DebugSymbols>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Resources\AppIcon.ico</ApplicationIcon>
@@ -100,6 +101,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="ConfigurationManager.cs" />
+    <Compile Include="EffectiveConditionEditor.xaml.cs">
+      <DependentUpon>EffectiveConditionEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ExtraButtonConfig\Keyboard.xaml.cs">
       <DependentUpon>Keyboard.xaml</DependentUpon>
     </Compile>
@@ -113,6 +117,10 @@
     <Compile Include="WacomArea.xaml.cs">
       <DependentUpon>WacomArea.xaml</DependentUpon>
     </Compile>
+    <Page Include="EffectiveConditionEditor.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ExtraButtonConfig\Keyboard.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -14,14 +14,15 @@ namespace TabletDriverGUI
 {
     public class ConfigurationManager
     {
+        public static bool Pause = false;
+
         public static event ConfigurationChangedHandler ConfigurationChanged;
         public delegate void ConfigurationChangedHandler();
 
         public const string DefaultConfigPath = "config/";
-        public static Configuration Current { get { return configurations[index]; } }
-        private static List<Configuration> configurations = new List<Configuration>();
+        public static Configuration Current { get { return Configurations[index]; } }
+        public static List<Configuration> Configurations = new List<Configuration>();
         private static int index = 0;
-        public static bool isFirstStart = false;
 
         static System.Threading.Timer ForegroundAppTimer;
         static string ForegroundApp;
@@ -36,7 +37,7 @@ namespace TabletDriverGUI
                     ForegroundApp = f;
                     CheckChanges();
                 }
-            }, null, 2000, 1000);
+            }, null, 1600, 1600);
             SystemEvents.DisplaySettingsChanged += (o, p) =>
             {
                 CheckChanges();
@@ -45,16 +46,17 @@ namespace TabletDriverGUI
 
         private static void CheckChanges(params string[] o)
         {
+            if (Pause) return;
             System.Drawing.Rectangle r = MainWindow.GetVirtualDesktopSize();
             string[][] e = {
                 new string[]{ "App", ForegroundApp },
-                new string[]{ "Width", r.Width.ToString() },
-                new string[]{ "Height",r.Height.ToString() }
+                new string[]{ "ScreenWidth", r.Width.ToString() },
+                new string[]{ "ScreenHeight", r.Height.ToString() }
             };
             Configuration dest = null;
             Configuration def = null;
             int max = 0;
-            foreach (Configuration c in configurations)
+            foreach (Configuration c in Configurations)
             {
                 int count = 0;
                 string[] s = c.EffectiveConditions.Split('|');
@@ -71,8 +73,8 @@ namespace TabletDriverGUI
                 if (count > max) { max = count; dest = c; }
                 skip:;
             }
-            if (dest == null) { dest = def ?? configurations[0]; }
-            index = configurations.IndexOf(dest);
+            if (dest == null) { dest = def ?? Configurations[0]; }
+            index = Configurations.IndexOf(dest);
             Current.DesktopWidth = r.Width;
             Current.DesktopHeight = r.Height;
             if (MainWindow.driver != null && MainWindow.running)
@@ -85,6 +87,7 @@ namespace TabletDriverGUI
 
         public static void ReloadConfigFiles(string path = DefaultConfigPath)
         {
+            Configurations.Clear();
             if (Directory.Exists(DefaultConfigPath))
             {
                 string[] s = Directory.GetFiles(DefaultConfigPath);
@@ -96,16 +99,15 @@ namespace TabletDriverGUI
                         {
                             Configuration conf = Configuration.CreateFromFile(str);
                             conf.ConfigFilename = str;
-                            configurations.Add(conf);
+                            Configurations.Add(conf);
                         }
                         catch (Exception) { }
                     }
                 }
             }
-            if (configurations.Count == 0)
+            if (Configurations.Count == 0)
             {
-                configurations.Add(new Configuration());
-                isFirstStart = true;
+                Configurations.Add(new Configuration() { isFirstStart = true });
             }
         }
 
@@ -149,6 +151,12 @@ namespace TabletDriverGUI
                 Debug.WriteLine(w);
                 return "";
             }
+        }
+
+        public static void QuestConfiguration(int selectedIndex)
+        {
+            index = selectedIndex;
+            ConfigurationChanged();
         }
     }
 }

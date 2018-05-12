@@ -10,6 +10,27 @@ namespace TabletDriverGUI
     [XmlRootAttribute("Configuration", IsNullable = true)]
     public class Configuration
     {
+        public bool isFirstStart = false;
+        public class EffectiveCondition
+        {
+            public string K = "", V = "";
+            public override string ToString()
+            {
+                return K + "=\"" + V + "\"";
+            }
+            public EffectiveCondition(string cfg)
+            {
+                string[] s = cfg.Split('>');
+                K = s[0]; V = s[1];
+            }
+            public EffectiveCondition()
+            {
+            }
+            public string ToFormattedString()
+            {
+                return K + ">" + V;
+            }
+        }
         public enum OutputModes
         {
             Absolute = 0,
@@ -83,6 +104,10 @@ namespace TabletDriverGUI
         public static string DefaultConfigFilename = "config/config.xml";
         public string ConfigFilename = DefaultConfigFilename;
 
+        public override string ToString()
+        {
+            return ConfigFilename;
+        }
 
         //
         // Send settings to the driver
@@ -90,6 +115,8 @@ namespace TabletDriverGUI
         public void SendToDriver(TabletDriver driver)
         {
             if (!driver.IsRunning) return;
+
+            isFirstStart = false;
 
             // Commands before settings
             if (CommandsBefore.Length > 0)
@@ -197,6 +224,7 @@ namespace TabletDriverGUI
                     }
                 }
             }
+
         }
 
         public void Write()

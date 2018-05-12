@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TabletDriverGUI.ExtraButtonConfig"
         mc:Ignorable="d"
-        Title="Mouse Wheel Speed" Height="100" Width="400" ResizeMode="NoResize">
+        Title="Mouse Wheel Speed" Height="100" Width="400" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
     <Grid>
         <Slider x:Name="slider" Margin="10,10,9.6,0" VerticalAlignment="Top" Height="25" Minimum="1" Maximum="200" LargeChange="20" SmallChange="10" Value="20" Loaded="Slider_Loaded"/>
         <Label x:Name="label" Content="20" HorizontalAlignment="Left" Margin="10,0,0,10.4" VerticalAlignment="Bottom"/>
