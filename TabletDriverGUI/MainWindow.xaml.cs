@@ -241,22 +241,6 @@ namespace TabletDriverGUI
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
 
-            // Load configuration
-            if (ConfigurationManager.Current.isFirstStart)
-            {
-                driver.ConsoleAddText("New config created!");
-            }
-            isLoadingSettings = true;
-            //Width = config.WindowWidth;
-            //Height = config.WindowHeight;
-            isLoadingSettings = false;
-
-
-            if (!ConfigurationManager.Current.DeveloperMode)
-            {
-            }
-
-
             // Invalid config -> Set defaults
             if (ConfigurationManager.Current.ScreenArea.Width == 0 || ConfigurationManager.Current.ScreenArea.Height == 0)
             {
@@ -2142,7 +2126,8 @@ namespace TabletDriverGUI
 
         private void canvasLoaded(object sender, RoutedEventArgs e)
         {
-            UpdateCanvasElements();
+            if (tabControl.SelectedItem == tabScreenMapping)
+                UpdateCanvasElements();
         }
 
         private void Window_Activated(object sender, EventArgs e)
@@ -2192,17 +2177,18 @@ namespace TabletDriverGUI
             }
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private void editEC_Click(object sender, RoutedEventArgs e)
         {
             if (ecList.SelectedIndex < 0) return;
             new EffectiveConditionEditor(ecList.SelectedItem as Configuration.EffectiveCondition).ShowDialog();
             Configuration c = ConfigurationManager.Configurations[profilesList.SelectedIndex];
-            SaveEC(c);
-            LoadEC(c);
+            SaveECToConfiguration(c);
             SaveProfile();
+            LoadEC(c);
+            ConfigurationManager.CheckChanges();
         }
 
-        private void SaveEC(Configuration c)
+        private void SaveECToConfiguration(Configuration c)
         {
             string b = "";
             foreach (object o in ecList.Items)
@@ -2212,20 +2198,20 @@ namespace TabletDriverGUI
             c.EffectiveConditions = b == "" ? "" : b.Substring(0, b.Length - 1);
         }
 
-        private void Button_Click_2(object sender, RoutedEventArgs e)
+        private void addEC_Click(object sender, RoutedEventArgs e)
         {
             var v = new Configuration.EffectiveCondition();
             ecList.Items.Add(v);
             ecList.SelectedItem = v;
-            Button_Click_1(sender, e);
+            editEC_Click(sender, e);
         }
 
-        private void Button_Click_3(object sender, RoutedEventArgs e)
+        private void deleteEC_Click(object sender, RoutedEventArgs e)
         {
             if (ecList.SelectedIndex < 0) return;
             ecList.Items.RemoveAt(ecList.SelectedIndex);
             Configuration c = ConfigurationManager.Configurations[profilesList.SelectedIndex];
-            SaveEC(c);
+            SaveECToConfiguration(c);
             SaveProfile();
         }
 
@@ -2255,7 +2241,7 @@ namespace TabletDriverGUI
             saveFileDialog.Filter = "eXtensible Markup Language|*.xml";
             if (saveFileDialog.ShowDialog() == true)
             {
-                Configuration c = new Configuration() { isFirstStart = true };
+                Configuration c = new Configuration();
                 System.Drawing.Rectangle r = MainWindow.GetVirtualDesktopSize();
                 c.DesktopWidth = r.Width;
                 c.DesktopHeight = r.Height;

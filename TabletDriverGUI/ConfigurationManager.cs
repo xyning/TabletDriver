@@ -24,27 +24,36 @@ namespace TabletDriverGUI
         public static List<Configuration> Configurations = new List<Configuration>();
         private static int index = 0;
 
-        static System.Threading.Timer ForegroundAppTimer;
-        static string ForegroundApp;
+        private static string ForegroundApp;
+
+        private static WinEventProc call;
+        private static IntPtr hook;
         static ConfigurationManager()
         {
             ReloadConfigFiles();
-            ForegroundAppTimer = new System.Threading.Timer(o =>
+            call = (c, w, l, p, n, z, g) =>
             {
-                string f = GetForegroundPath();
-                if (ForegroundApp != f)
+                if (w == (int)EventConstants.EVENT_SYSTEM_FOREGROUND)
                 {
-                    ForegroundApp = f;
-                    CheckChanges();
+                    string f = GetForegroundPath(l);
+                    MainWindow.driver.ConsoleAddText(f);
+                    if (ForegroundApp != f)
+                    {
+                        ForegroundApp = f;
+                        CheckChanges();
+                    }
                 }
-            }, null, 1600, 1600);
+            };
+            hook = SetWinEventHook((int)EventConstants.EVENT_MIN, (int)EventConstants.EVENT_MAX, IntPtr.Zero, call, 0, 0, 0);
+            int i = Marshal.GetLastWin32Error();
             SystemEvents.DisplaySettingsChanged += (o, p) =>
             {
                 CheckChanges();
             };
         }
 
-        private static void CheckChanges(params string[] o)
+
+        public static void CheckChanges()
         {
             if (Pause) return;
             System.Drawing.Rectangle r = MainWindow.GetVirtualDesktopSize();
@@ -74,14 +83,17 @@ namespace TabletDriverGUI
                 skip:;
             }
             if (dest == null) { dest = def ?? Configurations[0]; }
-            index = Configurations.IndexOf(dest);
-            Current.DesktopWidth = r.Width;
-            Current.DesktopHeight = r.Height;
-            if (MainWindow.driver != null && MainWindow.running)
+            if (index != Configurations.IndexOf(dest))
             {
-                Current.SendToDriver(MainWindow.driver);
-                ConfigurationChanged();
-                MainWindow.driver.ConsoleAddText("Configuration File " + Current.ConfigFilename + " Loaded.");
+                index = Configurations.IndexOf(dest);
+                Current.DesktopWidth = r.Width;
+                Current.DesktopHeight = r.Height;
+                if (MainWindow.driver != null && MainWindow.running)
+                {
+                    Current.SendToDriver(MainWindow.driver);
+                    ConfigurationChanged();
+                    MainWindow.driver.ConsoleAddText("Configuration File " + Current.ConfigFilename + " Loaded.");
+                }
             }
         }
 
@@ -107,42 +119,20 @@ namespace TabletDriverGUI
             }
             if (Configurations.Count == 0)
             {
-                Configurations.Add(new Configuration() { isFirstStart = true });
+                Configurations.Add(new Configuration());
             }
         }
 
-
-        public const int PROCESS_ALL_ACCESS = 0x000F0000 | 0x00100000 | 0xFFF;
-        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-        public static extern IntPtr GetForegroundWindow();
+        
         [DllImport("user32.dll")]
         public extern static int GetWindowThreadProcessId(IntPtr hWnd, out int lpdwProcessId);
-        [DllImport("Kernel32.dll")]
-        public extern static IntPtr OpenProcess(int fdwAccess, int fInherit, int IDProcess);
-        [DllImport("Kernel32.dll")]
-        public extern static bool TerminateProcess(IntPtr hProcess, int uExitCode);
-        [DllImport("Kernel32.dll")]
-        public extern static bool CloseHandle(IntPtr hObject);
-        [DllImport("Kernel32.dll", CharSet = CharSet.Auto, EntryPoint = "GetModuleFileName")]
-        private static extern uint GetModuleFileName(IntPtr hModule, StringBuilder lpszFileName, int nSize);
 
-        public static String GetPathFromHandle(IntPtr hwnd)
-        {
-            int pId = 0;
-            IntPtr pHandle = IntPtr.Zero;
-            GetWindowThreadProcessId(hwnd, out pId);
-            pHandle = OpenProcess(PROCESS_ALL_ACCESS, 0, pId);
-            StringBuilder sb = new StringBuilder(260);
-            GetModuleFileName(pHandle, sb, sb.Capacity);
-            CloseHandle(pHandle);
-            return sb.ToString();
-        }
-        public static String GetForegroundPath()
+        public static String GetForegroundPath(IntPtr window)
         {
             try
             {
                 int pId = 0;
-                GetWindowThreadProcessId(GetForegroundWindow(), out pId);
+                GetWindowThreadProcessId(window, out pId);
                 Process p = Process.GetProcessById(pId);
                 return p.MainModule.FileName;
             }
@@ -158,5 +148,73 @@ namespace TabletDriverGUI
             index = selectedIndex;
             ConfigurationChanged();
         }
+
+        #region CBT
+        
+        public enum EventConstants
+        {
+            EVENT_MIN = 0x00000001,
+            EVENT_MAX = 0x7FFFFFFF,
+            EVENT_SYSTEM_SOUND = 0x0001,
+            EVENT_SYSTEM_ALERT = 0x0002,
+            EVENT_SYSTEM_FOREGROUND = 0x0003,
+            EVENT_SYSTEM_MENUSTART = 0x0004,
+            EVENT_SYSTEM_MENUEND = 0x0005,
+            EVENT_SYSTEM_MENUPOPUPSTART = 0x0006,
+            EVENT_SYSTEM_MENUPOPUPEND = 0x0007,
+            EVENT_SYSTEM_CAPTURESTART = 0x0008,
+            EVENT_SYSTEM_CAPTUREEND = 0x0009,
+            EVENT_SYSTEM_MOVESIZESTART = 0x000A,
+            EVENT_SYSTEM_MOVESIZEEND = 0x000B,
+            EVENT_SYSTEM_CONTEXTHELPSTART = 0x000C,
+            EVENT_SYSTEM_CONTEXTHELPEND = 0x000D,
+            EVENT_SYSTEM_DRAGDROPSTART = 0x000E,
+            EVENT_SYSTEM_DRAGDROPEND = 0x000F,
+            EVENT_SYSTEM_DIALOGSTART = 0x0010,
+            EVENT_SYSTEM_DIALOGEND = 0x0011,
+            EVENT_SYSTEM_SCROLLINGSTART = 0x0012,
+            EVENT_SYSTEM_SCROLLINGEND = 0x0013,
+            EVENT_SYSTEM_SWITCHSTART = 0x0014,
+            EVENT_SYSTEM_SWITCHEND = 0x0015,
+            EVENT_SYSTEM_MINIMIZESTART = 0x0016,
+            EVENT_SYSTEM_MINIMIZEEND = 0x0017,
+            EVENT_SYSTEM_DESKTOPSWITCH = 0x0020,
+            EVENT_CONSOLE_CARET = 0x4001,
+            EVENT_CONSOLE_UPDATE_REGION = 0x4002,
+            EVENT_CONSOLE_UPDATE_SIMPLE = 0x4003,
+            EVENT_CONSOLE_UPDATE_SCROLL = 0x4004,
+            EVENT_CONSOLE_LAYOUT = 0x4005,
+            EVENT_CONSOLE_START_APPLICATION = 0x4006,
+            EVENT_CONSOLE_END_APPLICATION = 0x4007,
+            EVENT_OBJECT_CREATE = 0x8000,
+            EVENT_OBJECT_DESTROY = 0x8001,
+            EVENT_OBJECT_SHOW = 0x8002,
+            EVENT_OBJECT_HIDE = 0x8003,
+            EVENT_OBJECT_REORDER = 0x8004,
+            EVENT_OBJECT_FOCUS = 0x8005,
+            EVENT_OBJECT_SELECTION = 0x8006,
+            EVENT_OBJECT_SELECTIONADD = 0x8007,
+            EVENT_OBJECT_SELECTIONREMOVE = 0x8008,
+            EVENT_OBJECT_SELECTIONWITHIN = 0x8009,
+            EVENT_OBJECT_STATECHANGE = 0x800A,
+            EVENT_OBJECT_LOCATIONCHANGE = 0x800B,
+            EVENT_OBJECT_NAMECHANGE = 0x800C,
+            EVENT_OBJECT_DESCRIPTIONCHANGE = 0x800D,
+            EVENT_OBJECT_VALUECHANGE = 0x800E,
+            EVENT_OBJECT_PARENTCHANGE = 0x800F,
+            EVENT_OBJECT_HELPCHANGE = 0x8010,
+            EVENT_OBJECT_DEFACTIONCHANGE = 0x8011,
+            EVENT_OBJECT_ACCELERATORCHANGE = 0x8012,
+            EVENT_OBJECT_INVOKED = 0x8013,
+            EVENT_OBJECT_TEXTSELECTIONCHANGED = 0x8014,
+            EVENT_OBJECT_CONTENTSCROLLED = 0x8015
+        }
+        
+        public delegate void WinEventProc(IntPtr hWinEventHook, ulong @event, IntPtr hwnd, long idObject, long idChild, ulong dwEventThread, ulong dwmsEventTime);
+        
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventProc lpfnWinEventProc, long idProcess, long idThread, uint dwflags);
+
+        #endregion
     }
 }

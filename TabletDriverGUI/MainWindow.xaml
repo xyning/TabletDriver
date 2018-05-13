@@ -45,9 +45,9 @@
                     <Button x:Name="profileNew" Content="New" HorizontalAlignment="Left" Margin="65,0,0,10" VerticalAlignment="Bottom" Width="50" Click="profileNew_Click"/>
                     <Label Content="Effective Conditions" HorizontalAlignment="Left" Margin="204,41,0,0" VerticalAlignment="Top"/>
                     <ListBox x:Name="ecList" Margin="204,67,10,10"/>
-                    <Button Content="-" HorizontalAlignment="Right" Margin="0,44,10,0" VerticalAlignment="Top" Width="20" Click="Button_Click_3"/>
-                    <Button Content="+" HorizontalAlignment="Right" Margin="0,44,35,0" VerticalAlignment="Top" Width="20" Click="Button_Click_2"/>
-                    <Button Content="Edit" HorizontalAlignment="Right" Margin="0,44,60,0" VerticalAlignment="Top" Width="40" Click="Button_Click_1"/>
+                    <Button Content="-" HorizontalAlignment="Right" Margin="0,44,10,0" VerticalAlignment="Top" Width="20" Click="deleteEC_Click"/>
+                    <Button Content="+" HorizontalAlignment="Right" Margin="0,44,35,0" VerticalAlignment="Top" Width="20" Click="addEC_Click"/>
+                    <Button Content="Edit" HorizontalAlignment="Right" Margin="0,44,60,0" VerticalAlignment="Top" Width="40" Click="editEC_Click"/>
                 </Grid>
             </TabItem>
             <TabItem Header="Pen">

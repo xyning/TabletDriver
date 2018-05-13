@@ -10,7 +10,6 @@ namespace TabletDriverGUI
     [XmlRootAttribute("Configuration", IsNullable = true)]
     public class Configuration
     {
-        public bool isFirstStart = false;
         public class EffectiveCondition
         {
             public string K = "", V = "";
@@ -115,8 +114,6 @@ namespace TabletDriverGUI
         public void SendToDriver(TabletDriver driver)
         {
             if (!driver.IsRunning) return;
-
-            isFirstStart = false;
 
             // Commands before settings
             if (CommandsBefore.Length > 0)
