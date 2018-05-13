@@ -3,12 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace TabletDriverGUI
 {
@@ -36,7 +31,6 @@ namespace TabletDriverGUI
                 if (w == (int)EventConstants.EVENT_SYSTEM_FOREGROUND)
                 {
                     string f = GetForegroundPath(l);
-                    MainWindow.driver.ConsoleAddText(f);
                     if (ForegroundApp != f)
                     {
                         ForegroundApp = f;
@@ -123,7 +117,7 @@ namespace TabletDriverGUI
             }
         }
 
-        
+
         [DllImport("user32.dll")]
         public extern static int GetWindowThreadProcessId(IntPtr hWnd, out int lpdwProcessId);
 
@@ -150,7 +144,7 @@ namespace TabletDriverGUI
         }
 
         #region CBT
-        
+
         public enum EventConstants
         {
             EVENT_MIN = 0x00000001,
@@ -209,11 +203,11 @@ namespace TabletDriverGUI
             EVENT_OBJECT_TEXTSELECTIONCHANGED = 0x8014,
             EVENT_OBJECT_CONTENTSCROLLED = 0x8015
         }
-        
+
         public delegate void WinEventProc(IntPtr hWinEventHook, ulong @event, IntPtr hwnd, long idObject, long idChild, ulong dwEventThread, ulong dwmsEventTime);
-        
+
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventProc lpfnWinEventProc, long idProcess, long idThread, uint dwflags);
+        public static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventProc lpfnWinEventProc, uint idProcess, uint idThread, uint dwflags);
 
         #endregion
     }
