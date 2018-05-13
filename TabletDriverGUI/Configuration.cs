@@ -72,16 +72,16 @@ namespace TabletDriverGUI
 
         [XmlArray("ButtonMap")]
         [XmlArrayItem("Button")]
-        public int[] ButtonMap = new int[] { 1, 2, 3 };
+        public int[] ButtonMap = new int[] { 1, 7, 2 };
         public bool DisableButtons = false;
 
         [XmlArray("ExtraButtonEvents")]
         [XmlArrayItem("Event")]
-        public ExtraEvents[] ExtraButtonEvents = new ExtraEvents[3] { 0, 0, 0 };
+        public ExtraEvents[] ExtraButtonEvents = new ExtraEvents[3] { ExtraEvents.None, ExtraEvents.MouseWheel, ExtraEvents.None };
 
         [XmlArray("ExtraButtonEventTags")]
         [XmlArrayItem("Tag")]
-        public string[] ExtraButtonEventTag = new string[3] { "", "", "" };
+        public string[] ExtraButtonEventTag = new string[3] { "", "20", "" };
 
         [XmlArray("CommandsAfter")]
         [XmlArrayItem("Command")]
