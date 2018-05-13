@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using ExtCfg;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,7 +10,7 @@ namespace TabletDriverGUI
 {
     public class ConfigurationManager
     {
-        public static bool Pause = false;
+        public static SettingStorage GlobalSettings = new SettingStorage(DefaultConfigPath + "GlobalSettings.jk");
 
         public static event ConfigurationChangedHandler ConfigurationChanged;
         public delegate void ConfigurationChangedHandler();
@@ -19,27 +20,76 @@ namespace TabletDriverGUI
         public static List<Configuration> Configurations = new List<Configuration>();
         private static int index = 0;
 
+        static System.Threading.Timer ForegroundAppTimer;
         private static string ForegroundApp;
 
         private static WinEventProc call;
-        private static IntPtr hook;
+        private static IntPtr hook = IntPtr.Zero;
+
+        public enum ListenMethod
+        {
+            Stop, Poll_X, Poll_L, Poll_M, Callback_WinEventHook
+        }
+        private static ListenMethod method = ListenMethod.Poll_X;
+        public static ListenMethod Method
+        {
+            get => method;
+            set
+            {
+                method = value;
+                ForegroundAppTimer?.Dispose();
+                ForegroundAppTimer = null;
+                UnhookWinEvent(hook);
+                hook = IntPtr.Zero; call = null;
+                GlobalSettings["ForegroundListenMethod"] = (int)method;
+                GlobalSettings.Save();
+                int interval = 200;
+                switch (method)
+                {
+                    case ListenMethod.Poll_X: { interval += 600; goto case ListenMethod.Poll_L; }
+                    case ListenMethod.Poll_L: { interval += 800; goto case ListenMethod.Poll_M; }
+                    case ListenMethod.Poll_M:
+                        {
+                            ForegroundAppTimer = new System.Threading.Timer(o =>
+                            {
+                                string f = GetForegroundPath(GetForegroundWindow());
+                                if (ForegroundApp != f)
+                                {
+#if DEBUG
+                                    MainWindow.driver.ConsoleAddText(f);
+#endif
+                                    ForegroundApp = f;
+                                    CheckChanges();
+                                }
+                            }, null, interval, interval);
+                            break;
+                        }
+                    case ListenMethod.Callback_WinEventHook:
+                        {
+                            call = (c, w, l, p, n, z, g) =>
+                            {
+                                if (w == (int)EventConstants.EVENT_SYSTEM_FOREGROUND)
+                                {
+                                    string f = GetForegroundPath(l);
+#if DEBUG
+                                    MainWindow.driver.ConsoleAddText(f);
+#endif
+                                    CheckChanges();
+                                }
+                            };
+                            hook = SetWinEventHook((int)EventConstants.EVENT_MIN, (int)EventConstants.EVENT_MAX, IntPtr.Zero, call, 0, 0, 0);
+                            break;
+                        }
+                }
+            }
+        }
+
         static ConfigurationManager()
         {
             ReloadConfigFiles();
-            call = (c, w, l, p, n, z, g) =>
-            {
-                if (w == (int)EventConstants.EVENT_SYSTEM_FOREGROUND)
-                {
-                    string f = GetForegroundPath(l);
-                    if (ForegroundApp != f)
-                    {
-                        ForegroundApp = f;
-                        CheckChanges();
-                    }
-                }
-            };
-            hook = SetWinEventHook((int)EventConstants.EVENT_MIN, (int)EventConstants.EVENT_MAX, IntPtr.Zero, call, 0, 0, 0);
-            int i = Marshal.GetLastWin32Error();
+
+            Method = (ListenMethod)GlobalSettings["ForegroundListenMethod"].AsInt(2);
+
             SystemEvents.DisplaySettingsChanged += (o, p) =>
             {
                 CheckChanges();
@@ -49,7 +99,6 @@ namespace TabletDriverGUI
 
         public static void CheckChanges()
         {
-            if (Pause) return;
             System.Drawing.Rectangle r = MainWindow.GetVirtualDesktopSize();
             string[][] e = {
                 new string[]{ "App", ForegroundApp },
@@ -120,6 +169,9 @@ namespace TabletDriverGUI
 
         [DllImport("user32.dll")]
         public extern static int GetWindowThreadProcessId(IntPtr hWnd, out int lpdwProcessId);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
+        public static extern IntPtr GetForegroundWindow();
 
         public static String GetForegroundPath(IntPtr window)
         {
@@ -208,6 +260,10 @@ namespace TabletDriverGUI
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc, WinEventProc lpfnWinEventProc, uint idProcess, uint idThread, uint dwflags);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool UnhookWinEvent(IntPtr hWinEventHook);
+
 
         #endregion
     }

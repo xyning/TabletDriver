@@ -212,6 +212,14 @@ namespace TabletDriverGUI
             Loaded += MainWindow_Loaded;
             SizeChanged += MainWindow_SizeChanged;
 
+            switch (ConfigurationManager.Method)
+            {
+                case ConfigurationManager.ListenMethod.Stop: { disableAutoSwitch.IsChecked = true; break; }
+                case ConfigurationManager.ListenMethod.Poll_L: { fdm_Poll.IsChecked = true; break; }
+                case ConfigurationManager.ListenMethod.Poll_M: { fdm_PollH.IsChecked = true; break; }
+                case ConfigurationManager.ListenMethod.Poll_X: { fdm_PollL.IsChecked = true; break; }
+                case ConfigurationManager.ListenMethod.Callback_WinEventHook: { fdm_WEHook.IsChecked = true; break; }
+            }
             //
             isLoadingSettings = false;
 
@@ -2223,7 +2231,27 @@ namespace TabletDriverGUI
 
         private void CheckBox_Checked(object sender, RoutedEventArgs e)
         {
-            ConfigurationManager.Pause = (sender as CheckBox).IsChecked == true;
+            if ((sender as CheckBox).IsChecked == true)
+            {
+                fdmGroup.IsEnabled = false;
+                ConfigurationManager.Method = ConfigurationManager.ListenMethod.Stop;
+            }
+            else
+            {
+                fdmGroup.IsEnabled = true;
+                fdm_Checked(sender, e);
+            }
+        }
+
+        private void fdm_Checked(object sender, RoutedEventArgs e)
+        {
+            if (!IsLoaded) return;
+            ConfigurationManager.ListenMethod m = ConfigurationManager.ListenMethod.Poll_L;
+            if (fdm_Poll.IsChecked == true) m = ConfigurationManager.ListenMethod.Poll_L;
+            if (fdm_PollH.IsChecked == true) m = ConfigurationManager.ListenMethod.Poll_M;
+            if (fdm_PollL.IsChecked == true) m = ConfigurationManager.ListenMethod.Poll_X;
+            if (fdm_WEHook.IsChecked == true) m = ConfigurationManager.ListenMethod.Callback_WinEventHook;
+            ConfigurationManager.Method = m;
         }
 
         private void profileLoad_Click(object sender, RoutedEventArgs e)
