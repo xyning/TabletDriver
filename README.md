@@ -1,3 +1,8 @@
+add many many more bugs and a little useful features on hawku/TabletDriver  
+basic multiple profiles, mousewheel, keyboard etc.  
+download https://github.com/xyning/TabletDriver/releases  
+only tested on CTH680/CTL471  
+
 # TabletDriver
 
 This is a low latency graphics tablet driver that is meant to be used with rhythm game [osu!](https://osu.ppy.sh/home)
