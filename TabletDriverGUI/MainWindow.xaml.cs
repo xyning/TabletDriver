@@ -2169,7 +2169,12 @@ namespace TabletDriverGUI
 
         private void profilesList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (profilesList.SelectedIndex == -1) return;
+            if (profilesList.SelectedIndex == -1)
+            {
+                ecEdit.IsEnabled = ecAdd.IsEnabled = ecRemove.IsEnabled = profileDelete.IsEnabled = profileLoad.IsEnabled = profileNew.IsEnabled = false;
+                return;
+            }
+            ecEdit.IsEnabled = ecAdd.IsEnabled = ecRemove.IsEnabled = profileDelete.IsEnabled = profileLoad.IsEnabled = profileNew.IsEnabled = true;
             Configuration c = ConfigurationManager.Configurations[profilesList.SelectedIndex];
             LoadEC(c);
         }

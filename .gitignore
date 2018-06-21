@@ -2,8 +2,13 @@
 /packages
 /Release
 /Debug
+/x64
 /TabletDriverGUI/bin/
 /TabletDriverGUI/obj/
 /TabletDriverService/Release/
 /TabletDriverService/Debug/
-
+/CBTListener/Release/
+/CBTListener/Debug/
+/CBTListener/x64/
+/CBTListener_x86_wrapper/Release/
+/CBTListener_x86_wrapper/Debug/

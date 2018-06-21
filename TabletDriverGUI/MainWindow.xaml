@@ -40,14 +40,14 @@
                     <Label Content="Available Profiles" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
                     <Button Content="Refresh" HorizontalAlignment="Left" Margin="124,13,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
                     <CheckBox x:Name="disableAutoSwitch" Content="Disable Auto Switching (for editing settings)" HorizontalAlignment="Right" Margin="0,16,10,0" VerticalAlignment="Top" Checked="CheckBox_Checked" Unchecked="CheckBox_Checked"/>
-                    <Button x:Name="profileLoad" Content="Load" HorizontalAlignment="Left" Margin="120,0,0,10" VerticalAlignment="Bottom" Width="79" Click="profileLoad_Click"/>
-                    <Button x:Name="profileDelete" Content="Delete" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="50" Click="profileDelete_Click"/>
-                    <Button x:Name="profileNew" Content="New" HorizontalAlignment="Left" Margin="65,0,0,10" VerticalAlignment="Bottom" Width="50" Click="profileNew_Click"/>
+                    <Button x:Name="profileLoad" Content="Load" HorizontalAlignment="Left" Margin="120,0,0,10" VerticalAlignment="Bottom" Width="79" Click="profileLoad_Click" IsEnabled="False"/>
+                    <Button x:Name="profileDelete" Content="Delete" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="50" Click="profileDelete_Click" IsEnabled="False"/>
+                    <Button x:Name="profileNew" Content="New" HorizontalAlignment="Left" Margin="65,0,0,10" VerticalAlignment="Bottom" Width="50" Click="profileNew_Click" IsEnabled="False"/>
                     <Label Content="Effective Conditions" HorizontalAlignment="Left" Margin="204,41,0,0" VerticalAlignment="Top"/>
                     <ListBox x:Name="ecList" Margin="204,67,10,110"/>
-                    <Button Content="-" HorizontalAlignment="Right" Margin="0,44,10,0" VerticalAlignment="Top" Width="20" Click="deleteEC_Click"/>
-                    <Button Content="+" HorizontalAlignment="Right" Margin="0,44,35,0" VerticalAlignment="Top" Width="20" Click="addEC_Click"/>
-                    <Button Content="Edit" HorizontalAlignment="Right" Margin="0,44,60,0" VerticalAlignment="Top" Width="40" Click="editEC_Click"/>
+                    <Button x:Name="ecRemove" Content="-" HorizontalAlignment="Right" Margin="0,44,10,0" VerticalAlignment="Top" Width="20" Click="deleteEC_Click" IsEnabled="False"/>
+                    <Button x:Name="ecAdd" Content="+" HorizontalAlignment="Right" Margin="0,44,35,0" VerticalAlignment="Top" Width="20" Click="addEC_Click" IsEnabled="False"/>
+                    <Button x:Name="ecEdit" Content="Edit" HorizontalAlignment="Right" Margin="0,44,60,0" VerticalAlignment="Top" Width="40" Click="editEC_Click" IsEnabled="False"/>
                     <GroupBox x:Name="fdmGroup" Header="Foreground Detect Method" Margin="204,243,10,10">
                         <Grid Margin="0,0,0,0">
                             <RadioButton x:Name="fdm_PollL" Content="Poll (Low Freq)" HorizontalAlignment="Left" Margin="126,10,0,0" VerticalAlignment="Top" GroupName="fdm" Checked="fdm_Checked"/>

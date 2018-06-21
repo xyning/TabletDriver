@@ -38,7 +38,7 @@ VMulti::VMulti() {
 	// Relative mouse data
 	memset(&relativeData, 0, sizeof(relativeData));
 	relativeData.sensitivity = 1;
-	relativeData.resetDistance = 50;
+	relativeData.resetDistance = 8;
 
 	// Monitor info
 	UpdateMonitorInfo();
