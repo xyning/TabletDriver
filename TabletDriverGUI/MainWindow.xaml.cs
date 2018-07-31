@@ -1901,7 +1901,7 @@ namespace TabletDriverGUI
                 driver.ConsoleUnlock();
                 foreach (string row in rows)
                     clipboard += row + "\r\n";
-                Clipboard.SetText(clipboard);
+                Clipboard.SetDataObject(clipboard);
                 SetStatus("Debug message copied to clipboard");
             }
 
@@ -1915,7 +1915,7 @@ namespace TabletDriverGUI
                 driver.ConsoleUnlock();
                 foreach (string row in rows)
                     clipboard += row + "\r\n";
-                Clipboard.SetText(clipboard);
+                Clipboard.SetDataObject(clipboard);
                 SetStatus("Error message copied to clipboard");
             }
 
@@ -1983,7 +1983,7 @@ namespace TabletDriverGUI
 
                 if (clipboard.Length > 0)
                 {
-                    Clipboard.SetText(clipboard);
+                    Clipboard.SetDataObject(clipboard);
                     SetStatus("Benchmark result copied to clipboard");
                 }
             }
