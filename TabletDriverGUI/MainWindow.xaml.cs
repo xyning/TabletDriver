@@ -1887,7 +1887,7 @@ namespace TabletDriverGUI
             // Copy all
             if (sender == menuCopyAll)
             {
-                Clipboard.SetText(textConsole.Text);
+                Clipboard.SetDataObject(textConsole.Text);
                 SetStatus("Console output copied to clipboard");
             }
 
