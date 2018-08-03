@@ -21,17 +21,14 @@
 
     <Grid Background="Transparent" Margin="0,0,0,0">
 
-        <DockPanel Background="White">
-            <Menu DockPanel.Dock="Top"  Background="White">
-                <MenuItem Header="_File">
-                    <MenuItem Name="mainMenuImport" Header="_Import Settings" Click="MainMenuClick" />
-                    <MenuItem Name="mainMenuExport" Header="_Export Settings" Click="MainMenuClick" />
-                    <Separator />
-                    <MenuItem Name="mainMenuExit" Header="E_xit" Click="MainMenuClick" />
-                </MenuItem>
-            </Menu>
-            <TextBox AcceptsReturn="True" />
-        </DockPanel>
+        <Menu Margin="0,0,-0.4,0" VerticalAlignment="Top" Height="20" BorderBrush="#FFF0F0F0" BorderThickness="0,0,0,2" Padding="2,0,0,0" Background="White">
+            <MenuItem Header="_File" Height="18">
+                <MenuItem Name="mainMenuImport" Header="_Import Settings" Click="MainMenuClick" />
+                <MenuItem Name="mainMenuExport" Header="_Export Settings" Click="MainMenuClick" />
+                <Separator />
+                <MenuItem Name="mainMenuExit" Header="E_xit" Click="MainMenuClick" />
+            </MenuItem>
+        </Menu>
 
         <TabControl Name="tabControl" Margin="0,20,0,59"  Selector.IsSelected="True" Background="White" SelectionChanged="canvasLoaded" SelectedIndex="1">
             <TabItem Header="Profiles">
