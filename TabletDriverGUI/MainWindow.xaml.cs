@@ -238,6 +238,7 @@ namespace TabletDriverGUI
             try
             {
                 ConfigurationManager.Current.Write();
+                ConfigurationManager.Release();
             }
             catch (Exception)
             {
@@ -1449,6 +1450,32 @@ namespace TabletDriverGUI
 
         }
 
+        private int windowState = 0;
+        private void WindowMenuClick(object sender, RoutedEventArgs e)
+        {
+            if (sender == windowMenuSmall)
+            {
+                viewport.LayoutTransform = new ScaleTransform(.8, .8);
+                window.Width = 620 * .8;
+                window.Height = 485 * .8;
+                windowState = 1;
+            }
+            else if (sender == windowMenuLarge)
+            {
+                viewport.LayoutTransform = new ScaleTransform(1.2, 1.2);
+                window.Width = 620 * 1.2;
+                window.Height = 485 * 1.2;
+                windowState = 2;
+            }
+            else if (sender == windowMenuDefault)
+            {
+                viewport.LayoutTransform = new ScaleTransform(1, 1);
+                window.Width = 620;
+                window.Height = 485;
+                windowState = 0;
+            }
+        }
+
         #endregion
 
 
@@ -2140,7 +2167,28 @@ namespace TabletDriverGUI
 
         private void Window_Activated(object sender, EventArgs e)
         {
+            adjustWindowSize();
+        }
 
+        private void adjustWindowSize()
+        {
+            if (GetVirtualDesktopSize().Size.Height <= 600)
+            {
+                WindowMenuClick(windowMenuSmall, null);
+                windowMenuDefault.IsEnabled = false;
+                windowMenuLarge.IsEnabled = false;
+            }
+            else if (GetVirtualDesktopSize().Size.Height <= 720)
+            {
+                if (windowState == 2) WindowMenuClick(windowMenuDefault, null);
+                windowMenuDefault.IsEnabled = true;
+                windowMenuLarge.IsEnabled = false;
+            }
+            else
+            {
+                windowMenuDefault.IsEnabled = true;
+                windowMenuLarge.IsEnabled = true;
+            }
         }
 
         #region profile

@@ -88,6 +88,16 @@ namespace TabletDriverGUI
             }
         }
 
+        public static void Release()
+        {
+            try
+            {
+                mouseHook.Stop();
+                ForegroundAppTimer?.Dispose();
+            }
+            catch { }
+        }
+
         static ConfigurationManager()
         {
             ReloadConfigFiles();
