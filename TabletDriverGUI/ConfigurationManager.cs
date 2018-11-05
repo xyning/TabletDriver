@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace TabletDriverGUI
 {
@@ -25,6 +26,9 @@ namespace TabletDriverGUI
 
         private static WinEventProc call;
         private static IntPtr hook = IntPtr.Zero;
+
+        private static MouseHook mouseHook = new MouseHook();
+        private static bool[] mbState = { false, false };
 
         public enum ListenMethod
         {
@@ -94,6 +98,13 @@ namespace TabletDriverGUI
             {
                 CheckChanges();
             };
+
+            mouseHook.MouseButtonEvent += (a, b) => mbState[a] = b;
+            try
+            {
+                mouseHook.Start();
+            }
+            catch { }
         }
 
 
@@ -123,7 +134,7 @@ namespace TabletDriverGUI
                     }
                 }
                 if (count > max) { max = count; dest = c; }
-                skip:;
+            skip:;
             }
             if (dest == null) { dest = def ?? Configurations[0]; }
             if (index != Configurations.IndexOf(dest))
@@ -131,12 +142,25 @@ namespace TabletDriverGUI
                 index = Configurations.IndexOf(dest);
                 Current.DesktopWidth = r.Width;
                 Current.DesktopHeight = r.Height;
-                if (MainWindow.driver != null && MainWindow.running)
+
+                ThreadPool.QueueUserWorkItem(o =>
                 {
-                    Current.SendToDriver(MainWindow.driver);
-                    ConfigurationChanged();
-                    MainWindow.driver.ConsoleAddText("Configuration File " + Current.ConfigFilename + " Loaded.");
-                }
+                s:
+                    if (mbState[0] == false && mbState[1] == false)
+                    {
+                        if (MainWindow.driver != null && MainWindow.running)
+                        {
+                            Current.SendToDriver(MainWindow.driver);
+                            ConfigurationChanged();
+                            MainWindow.driver.ConsoleAddText("Configuration File " + Current.ConfigFilename + " Loaded.");
+                        }
+                    }
+                    else
+                    {
+                        SpinWait.SpinUntil(() => false, 250);
+                        goto s;
+                    }
+                });
             }
         }
 
@@ -173,7 +197,7 @@ namespace TabletDriverGUI
         [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
         public static extern IntPtr GetForegroundWindow();
 
-        public static String GetForegroundPath(IntPtr window)
+        public static string GetForegroundPath(IntPtr window)
         {
             try
             {
@@ -267,4 +291,97 @@ namespace TabletDriverGUI
 
         #endregion
     }
+
+    #region MouseHook
+    public class MouseHook
+    {
+        public delegate void MouseButtonEventFunc(int b, bool p);
+        public event MouseButtonEventFunc MouseButtonEvent;
+
+        private HookProc hookProc;
+        private static int hookHandler = 0;
+
+        public MouseHook() { }
+
+        ~MouseHook()
+        {
+            Stop();
+        }
+
+        public void Start()
+        {
+            if (hookHandler == 0)
+            {
+                hookProc = MouseHookProc;
+                hookHandler = SetWindowsHookEx(WH_MOUSE_LL, hookProc, Marshal.GetHINSTANCE(System.Reflection.Assembly.GetExecutingAssembly().GetModules()[0]), 0);
+
+                if (hookHandler == 0)
+                {
+                    Stop();
+                    throw new Exception("SetWindowsHookEx failed.");
+                }
+            }
+        }
+
+        public void Stop()
+        {
+            bool retMouse = true;
+
+            if (hookHandler != 0)
+            {
+                retMouse = UnhookWindowsHookEx(hookHandler);
+                hookHandler = 0;
+            }
+
+            if (!(retMouse))
+                throw new Exception("UnhookWindowsHookEx failed.");
+        }
+
+        private int MouseHookProc(int nCode, int wParam, IntPtr lParam)
+        {
+            if (nCode >= 0)
+            {
+                switch (wParam)
+                {
+                    case WM_LBUTTONDOWN:
+                        MouseButtonEvent?.Invoke(0, true);
+                        break;
+                    case WM_LBUTTONUP:
+                        MouseButtonEvent?.Invoke(0, false);
+                        break;
+                    case WM_RBUTTONDOWN:
+                        MouseButtonEvent?.Invoke(1, true);
+                        break;
+                    case WM_RBUTTONUP:
+                        MouseButtonEvent?.Invoke(1, false);
+                        break;
+                }
+            }
+
+            return CallNextHookEx(hookHandler, nCode, wParam, lParam);
+        }
+
+        private const int WM_MOUSEMOVE = 0x200;
+        private const int WM_LBUTTONDOWN = 0x201;
+        private const int WM_RBUTTONDOWN = 0x204;
+        private const int WM_MBUTTONDOWN = 0x207;
+        private const int WM_LBUTTONUP = 0x202;
+        private const int WM_RBUTTONUP = 0x205;
+        private const int WM_MBUTTONUP = 0x208;
+
+        public const int WH_MOUSE_LL = 14;
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        public static extern int SetWindowsHookEx(int idHook, HookProc lpfn, IntPtr hInstance, int threadId);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        public static extern bool UnhookWindowsHookEx(int idHook);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        public static extern int CallNextHookEx(int idHook, int nCode, int wParam, IntPtr lParam);
+
+        public delegate int HookProc(int nCode, int wParam, IntPtr lParam);
+    }
+    #endregion
+
 }
