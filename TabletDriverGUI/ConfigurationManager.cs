@@ -74,9 +74,9 @@ namespace TabletDriverGUI
                             {
                                 if (w == (int)EventConstants.EVENT_SYSTEM_FOREGROUND)
                                 {
-                                    string f = GetForegroundPath(l);
+                                    ForegroundApp = GetForegroundPath(l);
 #if DEBUG
-                                    MainWindow.driver.ConsoleAddText(f);
+                                    MainWindow.driver.ConsoleAddText(ForegroundApp);
 #endif
                                     CheckChanges();
                                 }

@@ -53,7 +53,7 @@
                             <RadioButton x:Name="fdm_WEHook" Margin="10,29,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" GroupName="fdm" Checked="fdm_Checked">
                                 <TextBlock>WinEventHook
                                     <LineBreak/>
-                                    (may not compatible with osu! except osu!lazer)</TextBlock>
+                                    (may not compatible with some applications)</TextBlock>
                             </RadioButton>
                         </Grid>
                     </GroupBox>
