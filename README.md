@@ -2,7 +2,30 @@ add many many more bugs and a little useful features on hawku/TabletDriver
 basic multiple profiles, mousewheel, keyboard etc.  
 download https://github.com/xyning/TabletDriver/releases  
 only tested on CTH680/CTL471  
-
+#### about wireless accessory kit (with wacom driver)  
+```
+# Wacom Wireless Accessory Kit CTH-680 (Wacom drivers installed)
+Tablet 0x056A 0x0084 0xFF00 0x000A
+Name "Wacom Wireless Accessory Kit CTH-680 (Wacom drivers installed)"
+ReportLength 11
+DetectMask 0x40
+MaxX 21600
+MaxY 13500
+MaxPressure 1023
+Width 216.000
+Height 135.000
+Type WacomDrivers
+```
+add code above into top of config/tablet.cfg to use wireless cth-680  
+  
+if you have other tablet using the same wireless accessory kit, you can also try it  
+maybe need to change ```MaxX MaxY MaxPressure Width Height 135.000``` to your tablet's actual value  
+i cant test with more tablets...  
+#### use tabletdriver without uninstall wacom driver  
+run tools/disable_wacom_drivers.bat and wait it  
+open tabletdriver. if your tablet's profile contains wacom driver support, it should work  
+  
+btw this is original hawku/tabletdriver's experimental feature (i only added some profile). so it should work on all forks of hawku/tabletdriver (?maybe)
 # TabletDriver
 
 This is a low latency graphics tablet driver that is meant to be used with rhythm game [osu!](https://osu.ppy.sh/home)
