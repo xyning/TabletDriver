@@ -1,3 +1,6 @@
+12/05/18 updated to hawku/TabletDriver v0.2. **still not properly tested**
+
+---
 add many many more bugs and a little useful features on hawku/TabletDriver  
 basic multiple profiles, mousewheel, keyboard etc.  
 download https://github.com/xyning/TabletDriver/releases  
@@ -19,7 +22,7 @@ Type WacomDrivers
 add code above into top of config/tablet.cfg to use wireless cth-680  
   
 if you have other tablet using the same wireless accessory kit, you can also try it  
-maybe need to change ```MaxX MaxY MaxPressure Width Height 135.000``` to your tablet's actual value  
+need to change ```MaxX MaxY MaxPressure Width Height``` to your tablet's actual value  
 i cant test with more tablets...  
 #### use tabletdriver without uninstall wacom driver  
 run tools/disable_wacom_drivers.bat and wait it  
