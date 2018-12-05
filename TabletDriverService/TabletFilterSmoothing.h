@@ -14,12 +14,11 @@ public:
 	TabletFilterSmoothing();
 	~TabletFilterSmoothing();
 
-	void SetTarget(Vector2D vector);
+	void SetTarget(TabletState *tabletState);
 	void SetPosition(Vector2D vector);
 	bool GetPosition(Vector2D *outputVector);
 	void Update();
 
-	double SetPosition(double x, double y);
 	double GetLatency(double filterWeight, double interval, double threshold);
 	double GetLatency(double filterWeight);
 	double GetLatency();

@@ -1,18 +1,28 @@
 #pragma once
-
+#include "TabletFilter.h"
 #include "PositionRingBuffer.h"
+
+#include <chrono>
+
 
 class TabletFilterNoiseReduction : public TabletFilter {
 public:
 
 	PositionRingBuffer buffer;
 	Vector2D position;
-	Vector2D lastTarget;
+	Vector2D latestTarget;
+	Vector2D oldTarget;
 
 	int iterations;
 	double distanceThreshold;
+	double distanceMaximum;
+	double reportRate;
+	chrono::high_resolution_clock::time_point timeBegin;
+	chrono::high_resolution_clock::time_point timeLastReport;
+	chrono::high_resolution_clock::time_point timeNow;
 
-	void SetTarget(Vector2D targetVector);
+
+	void SetTarget(TabletState *tabletState);
 	void SetPosition(Vector2D vector);
 	bool GetPosition(Vector2D *outputVector);
 	void Update();

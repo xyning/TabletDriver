@@ -40,7 +40,7 @@ Tablet::Tablet() {
 	name = "Unknown";
 	usbDevice = NULL;
 	hidDevice = NULL;
-	hidDevice2 = NULL;
+	hidDeviceAux = NULL;
 
 	usbPipeId = 0;
 
@@ -50,17 +50,14 @@ Tablet::Tablet() {
 	initReport = NULL;
 	initReportLength = 0;
 
-	// Reset state
-	memset(&state, 0, sizeof(state));
-
-	// Filters
+	// Timed filters
 	filterTimed[0] = &smoothing;
 	filterTimedCount = 1;
-	filterPacket[0] = &noise;
-	//filterPacket[1] = &peak;
-	filterPacketCount = 1;
 
-	peak.isEnabled = true;
+	// Report filters
+	filterReport[0] = &antiSmoothing;
+	filterReport[1] = &noise;
+	filterReportCount = 2;
 
 	// Button map
 	memset(&buttonMap, 0, sizeof(buttonMap));
@@ -68,16 +65,14 @@ Tablet::Tablet() {
 	buttonMap[1] = 2;
 	buttonMap[2] = 3;
 
+
 	// Tablet connection open
 	isOpen = false;
 
-	// Debug output
-	debugEnabled = false;
+	// Skip first reports, some of those might be invalid.
+	skipReports = 5;
 
-	// Skip first packets, some of those might be invalid.
-	skipPackets = 5;
-
-	// Keep tip down packet counter
+	// Keep tip down report counter
 	tipDownCounter = 0;
 
 }
@@ -91,8 +86,8 @@ Tablet::~Tablet() {
 		delete usbDevice;
 	if(hidDevice != NULL)
 		delete hidDevice;
-	if(hidDevice2 != NULL)
-		delete hidDevice2;
+	if(hidDeviceAux != NULL)
+		delete hidDeviceAux;
 	if(initReport != NULL)
 		delete initReport;
 	if(initFeature != NULL)
@@ -170,10 +165,10 @@ int Tablet::ReadPosition() {
 		return -1;
 	}
 
-	// Skip packets
-	if(skipPackets > 0) {
-		skipPackets--;
-		return Tablet::PacketInvalid;
+	// Skip reports
+	if(skipReports > 0) {
+		skipReports--;
+		return Tablet::ReportInvalid;
 	}
 
 
@@ -219,21 +214,21 @@ int Tablet::ReadPosition() {
 	}
 
 
-	// Validate packet id
+	// Validate report id
 	if(settings.reportId > 0 && reportData.reportId != settings.reportId) {
-		return Tablet::PacketInvalid;
+		return Tablet::ReportInvalid;
 	}
 
 
 
 	// Detect mask
 	if(settings.detectMask > 0 && (reportData.buttons & settings.detectMask) != settings.detectMask) {
-		return Tablet::PacketPositionInvalid;
+		return Tablet::ReportPositionInvalid;
 	}
 
 	// Ignore mask
 	if(settings.ignoreMask > 0 && (reportData.buttons & settings.ignoreMask) == settings.ignoreMask) {
-		return Tablet::PacketPositionInvalid;
+		return Tablet::ReportIgnore;
 	}
 
 	//
@@ -250,7 +245,7 @@ int Tablet::ReadPosition() {
 		reportData.buttons |= 1;
 	}
 
-	// Keep pen tip button down for a few packets
+	// Keep pen tip button down for a few reports
 	if(settings.keepTipDown > 0) {
 		if(reportData.buttons & 0x01) {
 			tipDownCounter = settings.keepTipDown;
@@ -263,6 +258,9 @@ int Tablet::ReadPosition() {
 
 	// Set valid
 	state.isValid = true;
+
+	state.time = chrono::high_resolution_clock::now();
+
 
 	// Button map
 	reportData.buttons = reportData.buttons & 0x0F;
@@ -287,11 +285,15 @@ int Tablet::ReadPosition() {
 	}
 	state.pressure = ((double)reportData.pressure / (double)settings.maxPressure);
 
-	// Tablet benchmark update
-	benchmark.Update(state.position);
+	// Tablet measurement update
+	if(measurement.isRunning) {
+		state.buttons = reportData.buttons & 0x0F;
+		measurement.Update(state);
+		return Tablet::ReportInvalid;
+	}
 
-	// Packet and position is valid
-	return Tablet::PacketValid;
+	// Report and position is valid
+	return Tablet::ReportValid;
 }
 
 
@@ -306,7 +308,7 @@ bool Tablet::Read(void *buffer, int length) {
 	} else if(hidDevice != NULL) {
 		status = hidDevice->Read(buffer, length);
 	}
-	if(debugEnabled && status) {
+	if(logger.debugEnabled && status) {
 		LOG_DEBUGBUFFER(buffer, length, "Read: ");
 	}
 	return status;

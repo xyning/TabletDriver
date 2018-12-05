@@ -5,10 +5,12 @@
 #include "USBDevice.h"
 #include "HIDDevice.h"
 #include "TabletSettings.h"
+#include "TabletState.h"
 #include "TabletFilterSmoothing.h"
 #include "TabletFilterNoiseReduction.h"
+#include "TabletFilterAntiSmoothing.h"
 #include "TabletFilterPeak.h"
-#include "TabletBenchmark.h"
+#include "TabletMeasurement.h"
 #include "Vector2D.h"
 
 using namespace std;
@@ -16,9 +18,9 @@ using namespace std;
 class Tablet {
 public:
 
-	USBDevice * usbDevice;
-	HIDDevice * hidDevice;
-	HIDDevice * hidDevice2;
+	USBDevice *usbDevice;
+	HIDDevice *hidDevice;
+	HIDDevice *hidDeviceAux;
 	int usbPipeId;
 
 	//
@@ -33,11 +35,12 @@ public:
 		None, DisableTablet, MouseWheel, Keyboard
 	};
 
-	// Tablet packet state
-	enum TabletPacketState {
-		PacketPositionInvalid = 0,
-		PacketValid = 1,
-		PacketInvalid = 2
+	// Tablet report state
+	enum TabletReportState {
+		ReportPositionInvalid = 0,
+		ReportValid = 1,
+		ReportInvalid = 2,
+		ReportIgnore = 3
 	};
 
 	//
@@ -53,14 +56,9 @@ public:
 	} reportData;
 
 	//
-	// Tablet state
+	// Tablet State
 	//
-	struct {
-		bool isValid;
-		BYTE buttons;
-		Vector2D position;
-		double pressure;
-	} state;
+	TabletState state;
 
 	// Settings
 	TabletSettings settings;
@@ -71,19 +69,19 @@ public:
 	// Noise reduction filter
 	TabletFilterNoiseReduction noise;
 
-	// Peak filter
-	TabletFilterPeak peak;
+	// Anti-smoothing filter
+	TabletFilterAntiSmoothing antiSmoothing;
 
-	// Timed filter
+	// Timed filters
 	TabletFilter *filterTimed[10];
 	int filterTimedCount;
 
-	// Packet filter
-	TabletFilter *filterPacket[10];
-	int filterPacketCount;
+	// Report filters
+	TabletFilter *filterReport[10];
+	int filterReportCount;
 
-	// Benchmark
-	TabletBenchmark benchmark;
+	// Measurement
+	TabletMeasurement measurement;
 
 	// Button map
 	BYTE buttonMap[16];
@@ -94,8 +92,7 @@ public:
 	//
 	string name = "Unknown";
 	bool isOpen;
-	bool debugEnabled;
-	int skipPackets;
+	int skipReports;
 
 	// Pen tip button keep down
 	int tipDownCounter;

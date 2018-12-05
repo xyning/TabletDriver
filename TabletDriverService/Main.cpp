@@ -10,7 +10,7 @@
 #include "CommandLine.h"
 #include "ProcessCommand.h"
 
-#define LOG_MODULE ""
+#define LOG_MODULE "Main"
 #define BUTTON_PRESSED(BINDEX) ((tablet->state.buttons&(1 << (BINDEX))) > 0)
 #define EXTRA_TIP_PRESSED (BUTTON_PRESSED(8-1))
 #define EXTRA_BOTTOM_PRESSED (BUTTON_PRESSED(7-1))
@@ -29,8 +29,10 @@
 // Global variables...
 Tablet *tablet;
 VMulti *vmulti;
+OutputManager *outputManager;
 ScreenMapper *mapper;
 thread *tabletThread;
+void SetOutput(TabletState *state);
 
 //
 // Init console parameters
@@ -53,12 +55,10 @@ void RunTabletThread() {
 	int status;
 	bool isFirstReport = true;
 	bool isResent = false;
-	double x, y;
 	TabletFilter *filter;
 	bool filterTimedEnabled;
 
 	chrono::high_resolution_clock::time_point timeBegin = chrono::high_resolution_clock::now();
-	chrono::high_resolution_clock::time_point timeNow = chrono::high_resolution_clock::now();
 
 	//
 	// Main Loop
@@ -72,22 +72,27 @@ void RunTabletThread() {
 		status = tablet->ReadPosition();
 
 		// Position OK
-		if(status == Tablet::PacketValid) {
+		if(status == Tablet::ReportValid) {
 			isResent = false;
 
-		// Invalid packet id
-		} else if(status == Tablet::PacketInvalid) {
+		// Invalid report id
+		} else if(status == Tablet::ReportInvalid) {
 			continue;
 
-		// Valid packet but position is not in-range or invalid
-		} else if(status == Tablet::PacketPositionInvalid) {
+		// Valid report but position is not in-range or invalid
+		} else if(status == Tablet::ReportPositionInvalid) {
 			if(!isResent && tablet->state.isValid) {
 				isResent = true;
 				tablet->state.isValid = false;
 			} else {
 				continue;
 			}
-			// Reading failed
+
+		// Ignore report
+		} else if(status == Tablet::ReportIgnore) {
+			continue;
+
+		// Reading failed
 		} else {
 			LOG_ERROR("Tablet Read Error!\n");
 			CleanupAndExit(1);
@@ -102,10 +107,9 @@ void RunTabletThread() {
 		}
 
 		// Debug messages
-		if(tablet->debugEnabled) {
-			timeNow = chrono::high_resolution_clock::now();
-			double delta = (timeNow - timeBegin).count() / 1000000.0;
-			LOG_DEBUG("STATE: %0.3f, %d, %0.3f, %0.3f, %0.3f\n",
+		if(logger.debugEnabled) {
+			double delta = (tablet->state.time - timeBegin).count() / 1000000.0;
+			LOG_DEBUG("TabletState: T=%0.3f, B=%d, X=%0.3f, Y=%0.3f, P=%0.3f\n",
 				delta,
 				tablet->state.buttons,
 				tablet->state.position.x,
@@ -116,27 +120,27 @@ void RunTabletThread() {
 
 
 		// Set output values
-		if(status == Tablet::PacketPositionInvalid) {
+		if(status == Tablet::ReportPositionInvalid) {
 			tablet->state.buttons = 0;
 		}
 
 		//
-		// Packet filters
+		// Report filters
 		//
 		// Is there any filters?
-		if(tablet->filterPacketCount > 0) {
+		if(tablet->filterReportCount > 0) {
 
 			// Loop through filters
-			for(int filterIndex = 0; filterIndex < tablet->filterPacketCount; filterIndex++) {
+			for(int filterIndex = 0; filterIndex < tablet->filterReportCount; filterIndex++) {
 
 				// Filter
-				filter = tablet->filterPacket[filterIndex];
+				filter = tablet->filterReport[filterIndex];
 
 				// Enabled?
 				if(filter != NULL && filter->isEnabled) {
 
 					// Process
-					filter->SetTarget(tablet->state.position);
+					filter->SetTarget(&tablet->state);
 					filter->Update();
 					filter->GetPosition(&tablet->state.position);
 				}
@@ -218,44 +222,15 @@ void RunTabletThread() {
 		
 
 		// Do not write report when timed filter is enabled
-		if(tablet->filterTimedCount == 0 || !filterTimedEnabled) {
+		if(filterTimedEnabled) {
+			continue;
+		}
 
 			if (EXTRA_EVENT_FIRED(Tablet::DisableTablet)) {
 				continue;
 			}
-			// Relative mode
-			if(vmulti->mode == VMulti::ModeRelativeMouse) {
+		SetOutput(&tablet->state);
 
-				x = tablet->state.position.x;
-				y = tablet->state.position.y;
-
-				// Map position to virtual screen (values between 0 and 1)
-				mapper->GetRotatedTabletPosition(&x, &y);
-
-				// Create VMulti report
-				vmulti->CreateReport(tablet->state.buttons, x, y, tablet->state.pressure);
-
-				// Write report to VMulti device
-				vmulti->WriteReport();
-
-
-
-			// Absolute / Digitizer mode
-			} else {
-				// Get x & y from the tablet state
-				x = tablet->state.position.x;
-				y = tablet->state.position.y;
-
-				// Map position to virtual screen (values betweeb 0->1)
-				mapper->GetScreenPosition(&x, &y);
-
-				// Create VMulti report
-				vmulti->CreateReport(tablet->state.buttons, x, y, tablet->state.pressure);
-
-				// Write report to VMulti device
-				vmulti->WriteReport();
-			}
-		}
 	}
 
 }
@@ -266,9 +241,19 @@ void RunTabletThread() {
 VOID CALLBACK FilterTimerCallback(_In_ PVOID lpParameter, _In_ BOOLEAN TimerOrWaitFired) {
 	Vector2D position;
 	TabletFilter *filter;
+	TabletState outputState;
+	bool filterEnabled = false;
 
 	// Set position
-	position.Set(tablet->state.position);
+	if(tablet->state.isValid) {
+		position.Set(tablet->state.position);
+	} else {
+		return;
+	}
+
+	memcpy(&outputState, &tablet->state, sizeof(outputState));
+	
+
 
 	// Loop through filters
 	for(int filterIndex = 0; filterIndex < tablet->filterTimedCount; filterIndex++) {
@@ -277,16 +262,20 @@ VOID CALLBACK FilterTimerCallback(_In_ PVOID lpParameter, _In_ BOOLEAN TimerOrWa
 		filter = tablet->filterTimed[filterIndex];
 
 		// Filter enabled?
-		if(!filter->isEnabled) return;
+		if(filter->isEnabled) {
+			filterEnabled = true;
+		} else {
+			continue;
+		}
 
 		// Set filter targets
-		filter->SetTarget(position);
+		filter->SetTarget(&outputState);
 
 		// Update filter position
 		filter->Update();
 
 		// Set output vector
-		filter->GetPosition(&position);
+		filter->GetPosition(&outputState.position);
 
 	}
 
@@ -294,62 +283,23 @@ VOID CALLBACK FilterTimerCallback(_In_ PVOID lpParameter, _In_ BOOLEAN TimerOrWa
 		return;
 	}
 
-	//
-	// Relative mode
-	//
-	if(vmulti->mode == VMulti::ModeRelativeMouse) {
 
-		// Map position to virtual screen (values between 0 and 1)
-		mapper->GetRotatedTabletPosition(&position.x, &position.y);
-
-		// Create VMulti report
-		vmulti->CreateReport(
-			tablet->state.buttons,
-			position.x,
-			position.y,
-			tablet->state.pressure
-		);
-
-		// Write report to VMulti device if report has changed
-		if(vmulti->HasReportChanged()
-			||
-			vmulti->reportRelativeMouse.x != 0
-			||
-			vmulti->reportRelativeMouse.y != 0
-			) {
-			vmulti->WriteReport();
-		}
-
-
+		
+	if(!filterEnabled) {
+		return;
 	}
 
-	//
-	// Absolute / Digitizer mode
-	//
-	else {
-
-
-		// Map position to virtual screen (values betweeb 0->1)
-		mapper->GetScreenPosition(&position.x, &position.y);
-
-		// Create VMulti report
-		vmulti->CreateReport(
-			tablet->state.buttons,
-			position.x,
-			position.y,
-			tablet->state.pressure
-		);
-
-
-		// Write report to VMulti device
-		if(vmulti->HasReportChanged() && tablet->state.isValid) {
-			vmulti->WriteReport();
-		}
-	}
-
-
+	SetOutput(&outputState);
 }
 
+
+//
+// Set Output
+//
+void SetOutput(TabletState *outputState) {
+	outputManager->Set(outputState);
+	outputManager->Write();
+}
 
 
 //
@@ -365,6 +315,7 @@ int main(int argc, char**argv) {
 	vmulti = NULL;
 	tablet = NULL;
 	tabletThread = NULL;
+	outputManager = new OutputManager();
 
 	// Init console
 	InitConsole();
@@ -452,7 +403,7 @@ int main(int argc, char**argv) {
 				running = true;
 
 				// Timed filter timer
-				if(tablet->filterPacketCount > 0) {
+				if(tablet->filterReportCount > 0) {
 					tablet->filterTimed[0]->callback = FilterTimerCallback;
 					tablet->filterTimed[0]->StartTimer();
 				}
@@ -510,8 +461,8 @@ void CleanupAndExit(int code) {
 		}
 	}
 
-	if(vmulti != NULL) {
-		vmulti->ResetReport();
+	if(outputManager != NULL) {
+		outputManager->Reset();
 	}
 	LOGGER_STOP();
 	Sleep(500);

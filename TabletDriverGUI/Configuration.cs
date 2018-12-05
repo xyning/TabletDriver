@@ -66,6 +66,16 @@ namespace TabletDriverGUI
         public double SmoothingLatency = 0;
         public int SmoothingInterval = 4;
         public bool SmoothingEnabled = false;
+        // Noise filter
+        public int NoiseFilterBuffer;
+        public double NoiseFilterThreshold;
+        public bool NoiseFilterEnabled;
+
+        // Anti-smoothing filter
+        public double AntiSmoothingShape;
+        public double AntiSmoothingCompensation;
+        public bool AntiSmoothingIgnoreWhenDragging;
+        public bool AntiSmoothingEnabled;
 
         public Area DesktopSize = new Area(0, 0, 0, 0);
         public bool AutomaticDesktopSize = true;
@@ -203,6 +213,13 @@ namespace TabletDriverGUI
             {
                 driver.SendCommand("Smoothing 0");
             }
+            NoiseFilterEnabled = false;
+            NoiseFilterBuffer = 10;
+            NoiseFilterThreshold = 0.5;
+
+            AntiSmoothingEnabled = false;
+            AntiSmoothingShape = 0.5;
+            AntiSmoothingCompensation = 4.0;
 
             // Extra Buttons
             driver.SendCommand("Extra 0 " + ExtraButtonEvents[0].ToString() + " " + ExtraButtonEventTag[0]);

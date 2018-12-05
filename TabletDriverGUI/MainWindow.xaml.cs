@@ -24,7 +24,7 @@ namespace TabletDriverGUI
     {
 
         // Version
-        public string Version = "0.1.5";
+        public string Version = "0.2";
 
         // Console stuff
         private List<string> commandHistory;
@@ -75,6 +75,9 @@ namespace TabletDriverGUI
         }
         MouseDrag mouseDrag;
 
+        // Measurement to area
+        private bool isEnabledMeasurementToArea = false;
+
         //
         // Constructor
         //
@@ -106,6 +109,7 @@ namespace TabletDriverGUI
                 ContextMenu = new System.Windows.Forms.ContextMenu(new System.Windows.Forms.MenuItem[]
                 {
                     new System.Windows.Forms.MenuItem("TabletDriverGUI " + Version),
+                    new System.Windows.Forms.MenuItem("Restart Driver", NotifyRestartDriver),
                     new System.Windows.Forms.MenuItem("Show", NotifyShowWindow),
                     new System.Windows.Forms.MenuItem("Exit", NotifyExit)
                 })
@@ -198,11 +202,11 @@ namespace TabletDriverGUI
             // Smoothing rate ComboBox
             //
             comboBoxSmoothingRate.Items.Clear();
-            for (int i = 2; i <= 8; i++)
+            for (int i = 1; i <= 8; i++)
             {
                 comboBoxSmoothingRate.Items.Add((1000.0 / i).ToString("0") + " Hz");
             }
-            comboBoxSmoothingRate.SelectedIndex = 2;
+            comboBoxSmoothingRate.SelectedIndex = 3;
 
             // Process command line arguments
             ProcessCommandLineArguments();
@@ -335,6 +339,13 @@ namespace TabletDriverGUI
             {
                 Hide();
             }
+        }
+
+
+        // 'Restart driver' handler for taskbar menu
+        void NotifyRestartDriver(object sender, EventArgs e)
+        {
+            RestartDriverClick(sender, null);
         }
 
         // 'Hide' handler for taskbar menu
@@ -490,7 +501,7 @@ namespace TabletDriverGUI
                 //
                 checkBoxSmoothing.IsChecked = ConfigurationManager.Current.SmoothingEnabled;
                 textSmoothingLatency.Text = Utils.GetNumberString(ConfigurationManager.Current.SmoothingLatency);
-                comboBoxSmoothingRate.SelectedIndex = ConfigurationManager.Current.SmoothingInterval - 2;
+                comboBoxSmoothingRate.SelectedIndex = ConfigurationManager.Current.SmoothingInterval - 1;
                 if (ConfigurationManager.Current.SmoothingEnabled)
                 {
                     textSmoothingLatency.IsEnabled = true;
@@ -502,6 +513,44 @@ namespace TabletDriverGUI
                     comboBoxSmoothingRate.IsEnabled = false;
                 }
 
+
+            //
+            // Noise filter
+            //
+            checkBoxNoiseFilter.IsChecked = config.NoiseFilterEnabled;
+            textNoiseBuffer.Text = Utils.GetNumberString(config.NoiseFilterBuffer);
+            textNoiseThreshold.Text = Utils.GetNumberString(config.NoiseFilterThreshold);
+            if (config.NoiseFilterEnabled)
+            {
+                textNoiseBuffer.IsEnabled = true;
+                textNoiseThreshold.IsEnabled = true;
+            }
+            else
+            {
+                textNoiseBuffer.IsEnabled = false;
+                textNoiseThreshold.IsEnabled = false;
+            }
+
+
+            //
+            // Anti-smoothing filter
+            //
+            checkBoxAntiSmoothing.IsChecked = config.AntiSmoothingEnabled;
+            textAntiSmoothingShape.Text = Utils.GetNumberString(config.AntiSmoothingShape, "0.00");
+            textAntiSmoothingCompensation.Text = Utils.GetNumberString(config.AntiSmoothingCompensation, "0.00");
+            checkBoxAntiSmoothingIgnoreWhenDragging.IsChecked = config.AntiSmoothingIgnoreWhenDragging;
+            if (config.AntiSmoothingEnabled)
+            {
+                textAntiSmoothingShape.IsEnabled = true;
+                textAntiSmoothingCompensation.IsEnabled = true;
+                checkBoxAntiSmoothingIgnoreWhenDragging.IsEnabled = true;
+            }
+            else
+            {
+                textAntiSmoothingShape.IsEnabled = false;
+                textAntiSmoothingCompensation.IsEnabled = false;
+                checkBoxAntiSmoothingIgnoreWhenDragging.IsEnabled = false;
+            }
                 //
                 // Run at startup
                 //
@@ -644,7 +693,7 @@ namespace TabletDriverGUI
 
             // Filter
             ConfigurationManager.Current.SmoothingEnabled = (bool)checkBoxSmoothing.IsChecked;
-            ConfigurationManager.Current.SmoothingInterval = comboBoxSmoothingRate.SelectedIndex + 2;
+            ConfigurationManager.Current.SmoothingInterval = comboBoxSmoothingRate.SelectedIndex + 1;
             if (Utils.ParseNumber(textSmoothingLatency.Text, out val))
                 ConfigurationManager.Current.SmoothingLatency = val;
 
@@ -658,6 +707,45 @@ namespace TabletDriverGUI
                 textSmoothingLatency.IsEnabled = false;
                 comboBoxSmoothingRate.IsEnabled = false;
             }
+
+            // Noise filter
+            config.NoiseFilterEnabled = (bool)checkBoxNoiseFilter.IsChecked;
+            if (Utils.ParseNumber(textNoiseBuffer.Text, out val))
+                config.NoiseFilterBuffer = (int)val;
+            if (Utils.ParseNumber(textNoiseThreshold.Text, out val))
+                config.NoiseFilterThreshold = val;
+            if (config.NoiseFilterEnabled)
+            {
+                textNoiseBuffer.IsEnabled = true;
+                textNoiseThreshold.IsEnabled = true;
+            }
+            else
+            {
+                textNoiseBuffer.IsEnabled = false;
+                textNoiseThreshold.IsEnabled = false;
+            }
+
+            // Anti-smoothing filter
+            config.AntiSmoothingEnabled = (bool)checkBoxAntiSmoothing.IsChecked;
+            if (Utils.ParseNumber(textAntiSmoothingShape.Text, out val))
+                config.AntiSmoothingShape = val;
+            if (Utils.ParseNumber(textAntiSmoothingCompensation.Text, out val))
+                config.AntiSmoothingCompensation = val;
+            config.AntiSmoothingIgnoreWhenDragging = (bool)checkBoxAntiSmoothingIgnoreWhenDragging.IsChecked;
+            if (config.AntiSmoothingEnabled)
+            {
+                textAntiSmoothingShape.IsEnabled = true;
+                textAntiSmoothingCompensation.IsEnabled = true;
+                checkBoxAntiSmoothingIgnoreWhenDragging.IsEnabled = true;
+            }
+            else
+            {
+                textAntiSmoothingShape.IsEnabled = false;
+                textAntiSmoothingCompensation.IsEnabled = false;
+                checkBoxAntiSmoothingIgnoreWhenDragging.IsEnabled = false;
+            }
+
+
 
             //
             // Run at startup
@@ -1676,6 +1764,54 @@ namespace TabletDriverGUI
 
                 }
             }
+
+
+            //
+            // Tablet measurement to tablet area
+            //
+            if (variableName == "measurement" && isEnabledMeasurementToArea)
+            {
+                string[] stringValues = stringValue.Split(' ');
+                int valueCount = stringValues.Count();
+                if (valueCount >= 4)
+                {
+                    double minimumX = 10000;
+                    double minimumY = 10000;
+                    double maximumX = -10000;
+                    double maximumY = -10000;
+                    for (int i = 0; i < valueCount; i += 2)
+                    {
+                        if (
+                            Utils.ParseNumber(stringValues[i], out double x)
+                            &&
+                            Utils.ParseNumber(stringValues[i + 1], out double y)
+                        )
+                        {
+                            // Find limits
+                            if (x > maximumX) maximumX = x;
+                            if (x < minimumX) minimumX = x;
+                            if (y > maximumY) maximumY = y;
+                            if (y < minimumY) minimumY = y;
+                        }
+                    }
+                    double areaWidth = maximumX - minimumX;
+                    double areaHeight = maximumY - minimumY;
+                    double centerX = minimumX + areaWidth / 2.0;
+                    double centerY = minimumY + areaHeight / 2.0;
+                    //MessageBox.Show("Area: " + areaWidth + " x " + areaHeight + " @ " + centerX + ", " + centerY);
+                    config.TabletArea.Width = areaWidth;
+                    config.TabletArea.Height = areaHeight;
+                    config.TabletArea.X = centerX;
+                    config.TabletArea.Y = centerY;
+                    LoadSettingsFromConfiguration();
+                    UpdateSettingsToConfiguration();
+
+
+                }
+                isEnabledMeasurementToArea = false;
+                buttonDrawArea.IsEnabled = true;
+                SetStatus("");
+            }
         }
 
         private void UpdateTitle()
@@ -1949,7 +2085,7 @@ namespace TabletDriverGUI
             // Start debug log
             else if (sender == menuStartDebug)
             {
-                string logFilename = "debug_" + DateTime.Now.ToString("yyyy-MM-dd_hh_mm_ss") + ".txt";
+                string logFilename = "debug_" + DateTime.Now.ToString("yyyy-MM-dd_HH_mm_ss") + ".txt";
                 ConsoleSendCommand("log " + logFilename);
                 ConsoleSendCommand("debug 1");
             }
@@ -1998,13 +2134,13 @@ namespace TabletDriverGUI
                     if (m.Success)
                     {
                         string tabletName = m.Groups[4].ToString();
-                        string totalPackets = m.Groups[1].ToString();
+                        string totalReports = m.Groups[1].ToString();
                         string noiseWidth = m.Groups[2].ToString();
                         string noiseHeight = m.Groups[3].ToString();
                         clipboard =
                             "Tablet(" + tabletName + ") " +
                             "Noise(" + noiseWidth + " mm x " + noiseHeight + " mm) " +
-                            "Packets(" + totalPackets + ")\r\n";
+                            "Reports(" + totalReports + ")\r\n";
                     }
                 }
 
@@ -2014,6 +2150,26 @@ namespace TabletDriverGUI
                     SetStatus("Benchmark result copied to clipboard");
                 }
             }
+
+
+            // Measure 2 points
+            else if (sender == menuMeasure2)
+            {
+                ConsoleSendCommand("Measure 2");
+            }
+
+            // Measure 3 points
+            else if (sender == menuMeasure3)
+            {
+                ConsoleSendCommand("Measure 3");
+            }
+
+            // Measure 4 points
+            else if (sender == menuMeasure4)
+            {
+                ConsoleSendCommand("Measure 4");
+            }
+
 
             // Open startup log
             else if (sender == menuOpenStartup)
@@ -2071,7 +2227,7 @@ namespace TabletDriverGUI
 
 
 
-        #region Wacom
+        #region Wacom / Draw area
 
         //
         // Wacom Area
@@ -2115,6 +2271,21 @@ namespace TabletDriverGUI
             }
 
             wacom.Close();
+        }
+
+
+        //
+        // Draw area
+        //
+        private void ButtonDrawArea_Click(object sender, RoutedEventArgs e)
+        {
+            if (!isEnabledMeasurementToArea)
+            {
+                isEnabledMeasurementToArea = true;
+                driver.SendCommand("Measure 2");
+                SetStatus("Click the top left and the bottom right corners of the area with your tablet pen!");
+                buttonDrawArea.IsEnabled = false;
+            }
         }
 
         #endregion

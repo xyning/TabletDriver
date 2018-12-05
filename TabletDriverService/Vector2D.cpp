@@ -44,3 +44,17 @@ double Vector2D::Distance(Vector2D target) {
 	return sqrt(dx * dx + dy * dy);
 }
 
+double Vector2D::Angle(Vector2D target) {
+	double dx = target.x - this->x;
+	double dy = target.y - this->y;
+	return atan2(dx, dy);
+}
+
+//
+// Linear interpolation add
+//
+void Vector2D::LerpAdd(Vector2D target, double t) {
+	x += (target.x - x) * t;
+	y += (target.y - y) * t;
+}
+
