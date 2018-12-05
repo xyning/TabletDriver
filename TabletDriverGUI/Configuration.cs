@@ -67,15 +67,15 @@ namespace TabletDriverGUI
         public int SmoothingInterval = 4;
         public bool SmoothingEnabled = false;
         // Noise filter
-        public int NoiseFilterBuffer;
-        public double NoiseFilterThreshold;
-        public bool NoiseFilterEnabled;
+        public int NoiseFilterBuffer = 10;
+        public double NoiseFilterThreshold = 0.5;
+        public bool NoiseFilterEnabled = false;
 
         // Anti-smoothing filter
-        public double AntiSmoothingShape;
-        public double AntiSmoothingCompensation;
+        public double AntiSmoothingShape = 0.5;
+        public double AntiSmoothingCompensation = 4.0;
         public bool AntiSmoothingIgnoreWhenDragging;
-        public bool AntiSmoothingEnabled;
+        public bool AntiSmoothingEnabled = false;
 
         public Area DesktopSize = new Area(0, 0, 0, 0);
         public bool AutomaticDesktopSize = true;

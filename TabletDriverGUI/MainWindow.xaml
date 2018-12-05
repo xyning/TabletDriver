@@ -47,11 +47,11 @@
                     <Button x:Name="profileDelete" Content="Delete" HorizontalAlignment="Left" Margin="10,0,0,10" VerticalAlignment="Bottom" Width="50" Click="profileDelete_Click" IsEnabled="False"/>
                     <Button x:Name="profileNew" Content="New" HorizontalAlignment="Left" Margin="65,0,0,10" VerticalAlignment="Bottom" Width="50" Click="profileNew_Click" IsEnabled="False"/>
                     <Label Content="Effective Conditions" HorizontalAlignment="Left" Margin="204,41,0,0" VerticalAlignment="Top"/>
-                    <ListBox x:Name="ecList" Margin="204,67,10,110"/>
+                    <ListBox x:Name="ecList" Margin="204,67,10,120"/>
                     <Button x:Name="ecRemove" Content="-" HorizontalAlignment="Right" Margin="0,44,10,0" VerticalAlignment="Top" Width="20" Click="deleteEC_Click" IsEnabled="False"/>
                     <Button x:Name="ecAdd" Content="+" HorizontalAlignment="Right" Margin="0,44,35,0" VerticalAlignment="Top" Width="20" Click="addEC_Click" IsEnabled="False"/>
                     <Button x:Name="ecEdit" Content="Edit" HorizontalAlignment="Right" Margin="0,44,60,0" VerticalAlignment="Top" Width="40" Click="editEC_Click" IsEnabled="False"/>
-                    <GroupBox x:Name="fdmGroup" Header="Foreground Detect Method" Margin="204,243,10,10">
+                    <GroupBox x:Name="fdmGroup" Header="Foreground Detect Method" Margin="204,233,10,10">
                         <Grid Margin="0,0,0,0">
                             <RadioButton x:Name="fdm_PollL" Content="Poll (Low Freq)" HorizontalAlignment="Left" Margin="126,10,0,0" VerticalAlignment="Top" GroupName="fdm" Checked="fdm_Checked"/>
                             <RadioButton x:Name="fdm_Poll" Content="Poll" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" GroupName="fdm" IsChecked="True" Checked="fdm_Checked"/>
@@ -295,7 +295,7 @@
 
                         </GroupBox>
                         <!-- Desktop size -->
-                        <GroupBox x:Name="groupDesktopSize" Header="Desktop Size" Margin="0,10,10.2,0" Height="100" VerticalAlignment="Top" HorizontalAlignment="Right" Width="257"
+                        <GroupBox x:Name="groupDesktopSize" Header="Desktop Size" Margin="0,10,10.2,0" Height="95" VerticalAlignment="Top" HorizontalAlignment="Right" Width="257"
                         >
                             <GroupBox.ToolTip>
                                 <StackPanel>
@@ -364,7 +364,7 @@
                                           Content="Disable buttons" HorizontalAlignment="Left" Width="167"/>
                             </Grid>
                         </GroupBox>
-                        <GroupBox x:Name="groupFilter" Header="Smoothing Filter" VerticalAlignment="Bottom" Margin="0,0,10.2,130" Height="100" HorizontalAlignment="Right" Width="257">
+                        <GroupBox x:Name="groupFilter" Header="Smoothing Filter" VerticalAlignment="Bottom" Margin="0,0,10.2,130" Height="95" HorizontalAlignment="Right" Width="257">
                             <GroupBox.ToolTip>
                                 <StackPanel>
                                     <TextBlock FontWeight="Bold"><Run Text="Cursor position smoothing filter"/></TextBlock>
@@ -420,7 +420,7 @@
                 <Grid>
 
                     <!-- Screen Mapping -->
-                    <GroupBox Header="Screen Map" Margin="10,174,10.2,9">
+                    <GroupBox Header="Screen Map" Margin="10,0,10.2,9" Height="155" VerticalAlignment="Bottom">
 
                         <GroupBox.ToolTip>
                             <StackPanel>
@@ -479,7 +479,7 @@
                     </GroupBox>
 
                     <!-- Tablet area -->
-                    <GroupBox Header="Tablet Area" Margin="10,5,10.2,178">
+                    <GroupBox Header="Tablet Area" Margin="10,5,10.2,0" Height="165" VerticalAlignment="Top">
                         <GroupBox.ToolTip>
                             <StackPanel>
                                 <TextBlock FontWeight="Bold"><Run Text="Tablet Area"/></TextBlock>
