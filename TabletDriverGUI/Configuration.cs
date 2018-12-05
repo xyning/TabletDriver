@@ -213,13 +213,28 @@ namespace TabletDriverGUI
             {
                 driver.SendCommand("Smoothing 0");
             }
-            NoiseFilterEnabled = false;
-            NoiseFilterBuffer = 10;
-            NoiseFilterThreshold = 0.5;
 
-            AntiSmoothingEnabled = false;
-            AntiSmoothingShape = 0.5;
-            AntiSmoothingCompensation = 4.0;
+            // Noise filter
+            if (NoiseFilterEnabled)
+            {
+                driver.SendCommand("Noise " + Utils.GetNumberString(NoiseFilterBuffer) + " " + Utils.GetNumberString(NoiseFilterThreshold));
+            }
+            else
+            {
+                driver.SendCommand("Noise 0");
+            }
+
+            // Anti-smoothing filter
+            if (AntiSmoothingEnabled)
+            {
+                driver.SendCommand("AntiSmoothing " + Utils.GetNumberString(AntiSmoothingShape) + " " +
+                    Utils.GetNumberString(AntiSmoothingCompensation) + " " +
+                    (AntiSmoothingIgnoreWhenDragging ? "true" : "false"));
+            }
+            else
+            {
+                driver.SendCommand("AntiSmoothing 0");
+            }
 
             // Extra Buttons
             driver.SendCommand("Extra 0 " + ExtraButtonEvents[0].ToString() + " " + ExtraButtonEventTag[0]);

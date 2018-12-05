@@ -517,10 +517,10 @@ namespace TabletDriverGUI
             //
             // Noise filter
             //
-            checkBoxNoiseFilter.IsChecked = config.NoiseFilterEnabled;
-            textNoiseBuffer.Text = Utils.GetNumberString(config.NoiseFilterBuffer);
-            textNoiseThreshold.Text = Utils.GetNumberString(config.NoiseFilterThreshold);
-            if (config.NoiseFilterEnabled)
+            checkBoxNoiseFilter.IsChecked = ConfigurationManager.Current.NoiseFilterEnabled;
+            textNoiseBuffer.Text = Utils.GetNumberString(ConfigurationManager.Current.NoiseFilterBuffer);
+            textNoiseThreshold.Text = Utils.GetNumberString(ConfigurationManager.Current.NoiseFilterThreshold);
+            if (ConfigurationManager.Current.NoiseFilterEnabled)
             {
                 textNoiseBuffer.IsEnabled = true;
                 textNoiseThreshold.IsEnabled = true;
@@ -535,11 +535,11 @@ namespace TabletDriverGUI
             //
             // Anti-smoothing filter
             //
-            checkBoxAntiSmoothing.IsChecked = config.AntiSmoothingEnabled;
-            textAntiSmoothingShape.Text = Utils.GetNumberString(config.AntiSmoothingShape, "0.00");
-            textAntiSmoothingCompensation.Text = Utils.GetNumberString(config.AntiSmoothingCompensation, "0.00");
-            checkBoxAntiSmoothingIgnoreWhenDragging.IsChecked = config.AntiSmoothingIgnoreWhenDragging;
-            if (config.AntiSmoothingEnabled)
+            checkBoxAntiSmoothing.IsChecked = ConfigurationManager.Current.AntiSmoothingEnabled;
+            textAntiSmoothingShape.Text = Utils.GetNumberString(ConfigurationManager.Current.AntiSmoothingShape, "0.00");
+            textAntiSmoothingCompensation.Text = Utils.GetNumberString(ConfigurationManager.Current.AntiSmoothingCompensation, "0.00");
+            checkBoxAntiSmoothingIgnoreWhenDragging.IsChecked = ConfigurationManager.Current.AntiSmoothingIgnoreWhenDragging;
+            if (ConfigurationManager.Current.AntiSmoothingEnabled)
             {
                 textAntiSmoothingShape.IsEnabled = true;
                 textAntiSmoothingCompensation.IsEnabled = true;
@@ -709,12 +709,12 @@ namespace TabletDriverGUI
             }
 
             // Noise filter
-            config.NoiseFilterEnabled = (bool)checkBoxNoiseFilter.IsChecked;
+            ConfigurationManager.Current.NoiseFilterEnabled = (bool)checkBoxNoiseFilter.IsChecked;
             if (Utils.ParseNumber(textNoiseBuffer.Text, out val))
-                config.NoiseFilterBuffer = (int)val;
+                ConfigurationManager.Current.NoiseFilterBuffer = (int)val;
             if (Utils.ParseNumber(textNoiseThreshold.Text, out val))
-                config.NoiseFilterThreshold = val;
-            if (config.NoiseFilterEnabled)
+                ConfigurationManager.Current.NoiseFilterThreshold = val;
+            if (ConfigurationManager.Current.NoiseFilterEnabled)
             {
                 textNoiseBuffer.IsEnabled = true;
                 textNoiseThreshold.IsEnabled = true;
@@ -726,13 +726,13 @@ namespace TabletDriverGUI
             }
 
             // Anti-smoothing filter
-            config.AntiSmoothingEnabled = (bool)checkBoxAntiSmoothing.IsChecked;
+            ConfigurationManager.Current.AntiSmoothingEnabled = (bool)checkBoxAntiSmoothing.IsChecked;
             if (Utils.ParseNumber(textAntiSmoothingShape.Text, out val))
-                config.AntiSmoothingShape = val;
+                ConfigurationManager.Current.AntiSmoothingShape = val;
             if (Utils.ParseNumber(textAntiSmoothingCompensation.Text, out val))
-                config.AntiSmoothingCompensation = val;
-            config.AntiSmoothingIgnoreWhenDragging = (bool)checkBoxAntiSmoothingIgnoreWhenDragging.IsChecked;
-            if (config.AntiSmoothingEnabled)
+                ConfigurationManager.Current.AntiSmoothingCompensation = val;
+            ConfigurationManager.Current.AntiSmoothingIgnoreWhenDragging = (bool)checkBoxAntiSmoothingIgnoreWhenDragging.IsChecked;
+            if (ConfigurationManager.Current.AntiSmoothingEnabled)
             {
                 textAntiSmoothingShape.IsEnabled = true;
                 textAntiSmoothingCompensation.IsEnabled = true;
@@ -1799,10 +1799,10 @@ namespace TabletDriverGUI
                     double centerX = minimumX + areaWidth / 2.0;
                     double centerY = minimumY + areaHeight / 2.0;
                     //MessageBox.Show("Area: " + areaWidth + " x " + areaHeight + " @ " + centerX + ", " + centerY);
-                    config.TabletArea.Width = areaWidth;
-                    config.TabletArea.Height = areaHeight;
-                    config.TabletArea.X = centerX;
-                    config.TabletArea.Y = centerY;
+                    ConfigurationManager.Current.TabletArea.Width = areaWidth;
+                    ConfigurationManager.Current.TabletArea.Height = areaHeight;
+                    ConfigurationManager.Current.TabletArea.X = centerX;
+                    ConfigurationManager.Current.TabletArea.Y = centerY;
                     LoadSettingsFromConfiguration();
                     UpdateSettingsToConfiguration();
 
