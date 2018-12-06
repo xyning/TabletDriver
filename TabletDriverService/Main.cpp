@@ -328,9 +328,18 @@ int main(int argc, char**argv) {
 	//LOGGER_DIRECT = true;
 	LOGGER_START();
 
+	bool noVMulti = false;
+	for (size_t i = 0; i < argc; i++)
+	{
+		string s = argv[i];
+		if (s == "-r") {
+			noVMulti = true;
+		}
+	}
+
 	// VMulti Device
 	vmulti = new VMulti();
-	if(!vmulti->isOpen) {
+	if(!vmulti->isOpen && !noVMulti) {
 		LOG_ERROR("Can't open VMulti device!\n\n");
 		LOG_ERROR("Possible fixes:\n");
 		LOG_ERROR("1) Install VMulti driver\n");

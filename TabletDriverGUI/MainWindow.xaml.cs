@@ -159,6 +159,7 @@ namespace TabletDriverGUI
             ToolTipService.ShowDurationProperty.OverrideMetadata(
                 typeof(DependencyObject), new FrameworkPropertyMetadata(60000));
 
+            if (App.exp_no_vmulti) radioModeAbsolute.IsEnabled = radioModeDigitizer.IsEnabled = radioModeRelative.IsEnabled = false;
 
             //
             // Buttom Map ComboBoxes
@@ -407,7 +408,12 @@ namespace TabletDriverGUI
                     case Configuration.OutputModes.Digitizer:
                         radioModeDigitizer.IsChecked = true;
                         break;
+                    case Configuration.OutputModes.SendInput:
+                        radioModeAbsoluteRaw.IsChecked = true;
+                        break;
                 }
+                if (App.exp_no_vmulti) radioModeAbsoluteRaw.IsChecked = true;
+
                 textTabletAreaRotation.Text = Utils.GetNumberString(ConfigurationManager.Current.TabletArea.Rotation);
                 checkBoxInvert.IsChecked = ConfigurationManager.Current.Invert;
 
@@ -514,43 +520,43 @@ namespace TabletDriverGUI
                 }
 
 
-            //
-            // Noise filter
-            //
-            checkBoxNoiseFilter.IsChecked = ConfigurationManager.Current.NoiseFilterEnabled;
-            textNoiseBuffer.Text = Utils.GetNumberString(ConfigurationManager.Current.NoiseFilterBuffer);
-            textNoiseThreshold.Text = Utils.GetNumberString(ConfigurationManager.Current.NoiseFilterThreshold);
-            if (ConfigurationManager.Current.NoiseFilterEnabled)
-            {
-                textNoiseBuffer.IsEnabled = true;
-                textNoiseThreshold.IsEnabled = true;
-            }
-            else
-            {
-                textNoiseBuffer.IsEnabled = false;
-                textNoiseThreshold.IsEnabled = false;
-            }
+                //
+                // Noise filter
+                //
+                checkBoxNoiseFilter.IsChecked = ConfigurationManager.Current.NoiseFilterEnabled;
+                textNoiseBuffer.Text = Utils.GetNumberString(ConfigurationManager.Current.NoiseFilterBuffer);
+                textNoiseThreshold.Text = Utils.GetNumberString(ConfigurationManager.Current.NoiseFilterThreshold);
+                if (ConfigurationManager.Current.NoiseFilterEnabled)
+                {
+                    textNoiseBuffer.IsEnabled = true;
+                    textNoiseThreshold.IsEnabled = true;
+                }
+                else
+                {
+                    textNoiseBuffer.IsEnabled = false;
+                    textNoiseThreshold.IsEnabled = false;
+                }
 
 
-            //
-            // Anti-smoothing filter
-            //
-            checkBoxAntiSmoothing.IsChecked = ConfigurationManager.Current.AntiSmoothingEnabled;
-            textAntiSmoothingShape.Text = Utils.GetNumberString(ConfigurationManager.Current.AntiSmoothingShape, "0.00");
-            textAntiSmoothingCompensation.Text = Utils.GetNumberString(ConfigurationManager.Current.AntiSmoothingCompensation, "0.00");
-            checkBoxAntiSmoothingIgnoreWhenDragging.IsChecked = ConfigurationManager.Current.AntiSmoothingIgnoreWhenDragging;
-            if (ConfigurationManager.Current.AntiSmoothingEnabled)
-            {
-                textAntiSmoothingShape.IsEnabled = true;
-                textAntiSmoothingCompensation.IsEnabled = true;
-                checkBoxAntiSmoothingIgnoreWhenDragging.IsEnabled = true;
-            }
-            else
-            {
-                textAntiSmoothingShape.IsEnabled = false;
-                textAntiSmoothingCompensation.IsEnabled = false;
-                checkBoxAntiSmoothingIgnoreWhenDragging.IsEnabled = false;
-            }
+                //
+                // Anti-smoothing filter
+                //
+                checkBoxAntiSmoothing.IsChecked = ConfigurationManager.Current.AntiSmoothingEnabled;
+                textAntiSmoothingShape.Text = Utils.GetNumberString(ConfigurationManager.Current.AntiSmoothingShape, "0.00");
+                textAntiSmoothingCompensation.Text = Utils.GetNumberString(ConfigurationManager.Current.AntiSmoothingCompensation, "0.00");
+                checkBoxAntiSmoothingIgnoreWhenDragging.IsChecked = ConfigurationManager.Current.AntiSmoothingIgnoreWhenDragging;
+                if (ConfigurationManager.Current.AntiSmoothingEnabled)
+                {
+                    textAntiSmoothingShape.IsEnabled = true;
+                    textAntiSmoothingCompensation.IsEnabled = true;
+                    checkBoxAntiSmoothingIgnoreWhenDragging.IsEnabled = true;
+                }
+                else
+                {
+                    textAntiSmoothingShape.IsEnabled = false;
+                    textAntiSmoothingCompensation.IsEnabled = false;
+                    checkBoxAntiSmoothingIgnoreWhenDragging.IsEnabled = false;
+                }
                 //
                 // Run at startup
                 //
@@ -621,6 +627,7 @@ namespace TabletDriverGUI
             if (radioModeAbsolute.IsChecked == true) ConfigurationManager.Current.OutputMode = Configuration.OutputModes.Absolute;
             if (radioModeRelative.IsChecked == true) ConfigurationManager.Current.OutputMode = Configuration.OutputModes.Relative;
             if (radioModeDigitizer.IsChecked == true) ConfigurationManager.Current.OutputMode = Configuration.OutputModes.Digitizer;
+            if (radioModeAbsoluteRaw.IsChecked == true) ConfigurationManager.Current.OutputMode = Configuration.OutputModes.SendInput;
 
 
             // Force full area
@@ -1699,7 +1706,14 @@ namespace TabletDriverGUI
         {
             if (running)
             {
-                driver.Start(ConfigurationManager.Current.DriverPath, ConfigurationManager.Current.DriverArguments);
+                string driverArguments = ConfigurationManager.Current.DriverArguments;
+                if (App.exp_no_vmulti)
+                {
+                    ConfigurationManager.Current.OutputMode = Configuration.OutputModes.SendInput;
+                    driverArguments += " -r";
+                }
+
+                driver.Start(ConfigurationManager.Current.DriverPath, driverArguments);
             }
             timerRestart.Stop();
         }
@@ -1846,7 +1860,14 @@ namespace TabletDriverGUI
                 // Console timer
                 timerConsoleUpdate.Start();
 
-                driver.Start(ConfigurationManager.Current.DriverPath, ConfigurationManager.Current.DriverArguments);
+                string driverArguments = ConfigurationManager.Current.DriverArguments;
+                if (App.exp_no_vmulti)
+                {
+                    ConfigurationManager.Current.OutputMode = Configuration.OutputModes.SendInput;
+                    driverArguments += " -r";
+                }
+
+                driver.Start(ConfigurationManager.Current.DriverPath, driverArguments);
                 if (!driver.IsRunning)
                 {
                     SetStatus("Can't start the driver! Check the console!");

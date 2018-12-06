@@ -13,8 +13,12 @@ namespace TabletDriverGUI
         public static Guid InstanceGuid = new Guid("30fa6b68-de2b-4a43-a9f1-6b23f4ba2b56");
         Mutex instanceMutex;
 
+        public static bool exp_no_vmulti = false;
+
         public App()
         {
+
+            if (System.Windows.Input.Keyboard.IsKeyDown(System.Windows.Input.Key.LeftShift) || System.Windows.Input.Keyboard.IsKeyDown(System.Windows.Input.Key.RightShift)) exp_no_vmulti = true;
 
             //
             // Prevent multiple instances of TabletDriverGUI

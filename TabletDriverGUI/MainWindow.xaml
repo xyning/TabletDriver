@@ -411,6 +411,8 @@
                                      Checked="CheckboxChanged" />
                                 <RadioButton x:Name="radioModeDigitizer" GroupName="OutputMode" Margin="2" Content="Windows Ink" 
                                      Checked="CheckboxChanged" />
+                                <RadioButton x:Name="radioModeAbsoluteRaw" GroupName="OutputMode" Margin="2" Content="Absolute&#x000A;(Windows API)"
+                                    Checked="CheckboxChanged" />
                             </StackPanel>
                         </GroupBox>
                     </Grid>

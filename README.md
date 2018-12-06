@@ -1,10 +1,13 @@
-12/05/18 updated to hawku/TabletDriver v0.2. **still not properly tested**
+12/05/18 updated to hawku/TabletDriver v0.2. **still not properly tested**  
 
 ---
 add many many more bugs and a little useful features on hawku/TabletDriver  
 basic multiple profiles, mousewheel, keyboard etc.  
 download https://github.com/xyning/TabletDriver/releases  
 only tested on CTH680/CTL471  
+#### run without vmulti driver installation
+hold ```Shift``` key and start TabletDriverGUI.exe.  
+this will force the driver work under windows SendInput api, it may or may not work.
 #### about wireless accessory kit (with wacom driver)  
 ```
 # Wacom Wireless Accessory Kit CTH-680 (Wacom drivers installed)
@@ -26,7 +29,7 @@ need to change ```MaxX MaxY MaxPressure Width Height``` to your tablet's actual 
 i cant test with more tablets...  
 #### use tabletdriver without uninstall wacom driver  
 run tools/disable_wacom_drivers.bat and wait it  
-open tabletdriver. if your tablet's profile contains wacom driver support, it should work  
+open tabletdriver. if your tablet's profile contains wacom driver support, it should work now  
   
 btw this is original hawku/tabletdriver's experimental feature (i only added some profile). so it should work on all forks of hawku/tabletdriver (?maybe)
 # TabletDriver
