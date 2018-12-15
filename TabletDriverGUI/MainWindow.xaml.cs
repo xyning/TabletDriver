@@ -1830,7 +1830,8 @@ namespace TabletDriverGUI
 
         private void UpdateTitle()
         {
-            if (!driver.IsRunning) return;
+            string title = "TabletDriverGUI - " + TabletName + " - " + ConfigurationManager.Current.ConfigFilename;
+            Title = title;
 
             // Limit notify icon text length
             if (title.Length > 63)
