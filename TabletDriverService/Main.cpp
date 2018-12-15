@@ -11,14 +11,6 @@
 #include "ProcessCommand.h"
 
 #define LOG_MODULE "Main"
-#define BUTTON_PRESSED(BINDEX) ((tablet->state.buttons&(1 << (BINDEX))) > 0)
-#define EXTRA_TIP_PRESSED (BUTTON_PRESSED(8-1))
-#define EXTRA_BOTTOM_PRESSED (BUTTON_PRESSED(7-1))
-#define EXTRA_TOP_PRESSED (BUTTON_PRESSED(6-1))
-#define EXTRA_TIP_EVENT_FIRED(EVENT) (EXTRA_TIP_PRESSED && (tablet->btn1 == EVENT))
-#define EXTRA_BOTTOM_EVENT_FIRED(EVENT) (EXTRA_BOTTOM_PRESSED && (tablet->btn2 == EVENT))
-#define EXTRA_TOP_EVENT_FIRED(EVENT) (EXTRA_TOP_PRESSED && (tablet->btn3 == EVENT))
-#define EXTRA_EVENT_FIRED(EVENT) (EXTRA_TIP_EVENT_FIRED(EVENT) || EXTRA_BOTTOM_EVENT_FIRED(EVENT) || EXTRA_TOP_EVENT_FIRED(EVENT))
 #include "Logger.h"
 
 #pragma comment(lib, "hid.lib")
@@ -28,11 +20,13 @@
 
 // Global variables...
 Tablet *tablet;
+TabletHandler *tabletHandler;
 VMulti *vmulti;
+CommandHandler *commandHandler;
 OutputManager *outputManager;
 ScreenMapper *mapper;
-thread *tabletThread;
-void SetOutput(TabletState *state);
+//thread *tabletThread;
+
 
 //
 // Init console parameters
@@ -48,259 +42,6 @@ void InitConsole() {
 	SetConsoleMode(inputHandle, consoleMode);
 }
 
-//
-// Tablet process
-//
-void RunTabletThread() {
-	int status;
-	bool isFirstReport = true;
-	bool isResent = false;
-	TabletFilter *filter;
-	bool filterTimedEnabled;
-
-	chrono::high_resolution_clock::time_point timeBegin = chrono::high_resolution_clock::now();
-
-	//
-	// Main Loop
-	//
-
-	while(true) {
-
-		//
-		// Read tablet position
-		//
-		status = tablet->ReadPosition();
-
-		// Position OK
-		if(status == Tablet::ReportValid) {
-			isResent = false;
-
-		// Invalid report id
-		} else if(status == Tablet::ReportInvalid) {
-			continue;
-
-		// Valid report but position is not in-range or invalid
-		} else if(status == Tablet::ReportPositionInvalid) {
-			if(!isResent && tablet->state.isValid) {
-				isResent = true;
-				tablet->state.isValid = false;
-			} else {
-				continue;
-			}
-
-		// Ignore report
-		} else if(status == Tablet::ReportIgnore) {
-			continue;
-
-		// Reading failed
-		} else {
-			LOG_ERROR("Tablet Read Error!\n");
-			CleanupAndExit(1);
-		}
-
-		//
-		// Don't send the first report
-		//
-		if(isFirstReport) {
-			isFirstReport = false;
-			continue;
-		}
-
-		// Debug messages
-		if(logger.debugEnabled) {
-			double delta = (tablet->state.time - timeBegin).count() / 1000000.0;
-			LOG_DEBUG("TabletState: T=%0.3f, B=%d, X=%0.3f, Y=%0.3f, P=%0.3f\n",
-				delta,
-				tablet->state.buttons,
-				tablet->state.position.x,
-				tablet->state.position.y,
-				tablet->state.pressure
-			);
-		}
-
-
-		// Set output values
-		if(status == Tablet::ReportPositionInvalid) {
-			tablet->state.buttons = 0;
-		}
-
-		//
-		// Report filters
-		//
-		// Is there any filters?
-		if(tablet->filterReportCount > 0) {
-
-			// Loop through filters
-			for(int filterIndex = 0; filterIndex < tablet->filterReportCount; filterIndex++) {
-
-				// Filter
-				filter = tablet->filterReport[filterIndex];
-
-				// Enabled?
-				if(filter != NULL && filter->isEnabled) {
-
-					// Process
-					filter->SetTarget(&tablet->state);
-					filter->Update();
-					filter->GetPosition(&tablet->state.position);
-				}
-
-			}
-		}
-
-
-		// Timed filter enabled?
-		filterTimedEnabled = false;
-		for(int filterIndex = 0; filterIndex < tablet->filterTimedCount; filterIndex++) {
-			if(tablet->filterTimed[filterIndex]->isEnabled)
-				filterTimedEnabled = true;
-		}
-
-		// Mouse Wheel Events
-		static Vector2D last;
-		if (EXTRA_TIP_EVENT_FIRED(Tablet::MouseWheel)) {
-			tablet->state.buttons &= ~(1 << 0);
-			double delta = last.y - tablet->state.position.y;
-			mouse_event(MOUSEEVENTF_WHEEL, 0, 0, -delta * (tablet->settings.mouseWheelSpeed[0]), 0);
-		}
-		if (EXTRA_BOTTOM_EVENT_FIRED(Tablet::MouseWheel) && BUTTON_PRESSED(0)) {
-			tablet->state.buttons &= ~(1 << 0);
-			double delta = last.y - tablet->state.position.y;
-			mouse_event(MOUSEEVENTF_WHEEL, 0, 0, -delta * (tablet->settings.mouseWheelSpeed[1]), 0);
-		}
-		if (EXTRA_TOP_EVENT_FIRED(Tablet::MouseWheel) && BUTTON_PRESSED(0)) {
-			tablet->state.buttons &= ~(1 << 0);
-			double delta = last.y - tablet->state.position.y;
-			mouse_event(MOUSEEVENTF_WHEEL, 0, 0, -delta * (tablet->settings.mouseWheelSpeed[2]), 0);
-		}
-		last = tablet->state.position;
-
-		// Keyboard Events
-		static bool key0Pressed, key1Pressed, key2Pressed;
-		if (EXTRA_TIP_EVENT_FIRED(Tablet::Keyboard) && (!key0Pressed)) {
-			for (int i = 0; i < 8; i++)
-			{
-				keybd_event(tablet->settings.keyboardKeyCodes[0][i], 0, 0, 0);
-			}
-			key0Pressed = true;
-		}
-		else if ((!EXTRA_TIP_EVENT_FIRED(Tablet::Keyboard)) && key0Pressed) {
-				for (int i = 0; i < 8; i++)
-				{
-					keybd_event(tablet->settings.keyboardKeyCodes[0][i], 0, KEYEVENTF_KEYUP, 0);
-				}
-				key0Pressed = false;
-			}
-		if (EXTRA_BOTTOM_EVENT_FIRED(Tablet::Keyboard) && (!key1Pressed)) {
-			for (int i = 0; i < 8; i++)
-			{
-				keybd_event(tablet->settings.keyboardKeyCodes[1][i], 0, 0, 0);
-			}
-			key1Pressed = true;
-		}
-		else if ((!EXTRA_BOTTOM_EVENT_FIRED(Tablet::Keyboard)) && key1Pressed) {
-				for (int i = 0; i < 8; i++)
-				{
-					keybd_event(tablet->settings.keyboardKeyCodes[1][i], 0, KEYEVENTF_KEYUP, 0);
-				}
-				key1Pressed = false;
-			}
-		if (EXTRA_TOP_EVENT_FIRED(Tablet::Keyboard) && (!key2Pressed)) {
-			for (int i = 0; i < 8; i++)
-			{
-				keybd_event(tablet->settings.keyboardKeyCodes[2][i], 0, 0, 0);
-			}
-			key2Pressed = true;
-		}
-		else if ((!EXTRA_TOP_EVENT_FIRED(Tablet::Keyboard)) && key2Pressed) {
-				for (int i = 0; i < 8; i++)
-				{
-					keybd_event(tablet->settings.keyboardKeyCodes[2][i], 0, KEYEVENTF_KEYUP, 0);
-				}
-				key2Pressed = false;
-			}
-		
-
-		// Do not write report when timed filter is enabled
-		if(filterTimedEnabled) {
-			continue;
-		}
-
-			if (EXTRA_EVENT_FIRED(Tablet::DisableTablet)) {
-				continue;
-			}
-		SetOutput(&tablet->state);
-
-	}
-
-}
-
-//
-// Tablet filter timer callback
-//
-VOID CALLBACK FilterTimerCallback(_In_ PVOID lpParameter, _In_ BOOLEAN TimerOrWaitFired) {
-	Vector2D position;
-	TabletFilter *filter;
-	TabletState outputState;
-	bool filterEnabled = false;
-
-	// Set position
-	if(tablet->state.isValid) {
-		position.Set(tablet->state.position);
-	} else {
-		return;
-	}
-
-	memcpy(&outputState, &tablet->state, sizeof(outputState));
-	
-
-
-	// Loop through filters
-	for(int filterIndex = 0; filterIndex < tablet->filterTimedCount; filterIndex++) {
-
-		// Filter
-		filter = tablet->filterTimed[filterIndex];
-
-		// Filter enabled?
-		if(filter->isEnabled) {
-			filterEnabled = true;
-		} else {
-			continue;
-		}
-
-		// Set filter targets
-		filter->SetTarget(&outputState);
-
-		// Update filter position
-		filter->Update();
-
-		// Set output vector
-		filter->GetPosition(&outputState.position);
-
-	}
-
-	if (EXTRA_EVENT_FIRED(Tablet::DisableTablet)) {
-		return;
-	}
-
-
-		
-	if(!filterEnabled) {
-		return;
-	}
-
-	SetOutput(&outputState);
-}
-
-
-//
-// Set Output
-//
-void SetOutput(TabletState *outputState) {
-	outputManager->Set(outputState);
-	outputManager->Write();
-}
-
 
 //
 // Main
@@ -314,7 +55,8 @@ int main(int argc, char**argv) {
 	// Init global variables
 	vmulti = NULL;
 	tablet = NULL;
-	tabletThread = NULL;
+	tabletHandler = NULL;
+	//tabletThread = NULL;
 	outputManager = new OutputManager();
 
 	// Init console
@@ -324,22 +66,85 @@ int main(int argc, char**argv) {
 	mapper = new ScreenMapper(tablet);
 	mapper->SetRotation(0);
 
+	// Command handler
+	commandHandler = new CommandHandler();
+	commandHandler->CreateCommands();
+
+	//
+	// Command: Start
+	//
+	// Starts the driver
+	//
+	commandHandler->AddCommand(new Command("Start", [&](CommandLine *cmd) {
+		LOG_INFO(">> %s\n", cmd->line.c_str());
+
+		if(running) {
+			LOG_INFO("Driver is already started!\n");
+			return true;
+		}
+
+		// Unknown tablet
+		if(tablet == NULL) {
+			LOG_ERROR("Tablet not found!\n");
+			CleanupAndExit(1);
+		}
+
+		// Tablet init
+		if(!tablet->Init()) {
+			LOG_ERROR("Tablet init failed!\n");
+			LOG_ERROR("Possible fixes:\n");
+			LOG_ERROR("1) Uninstall other tablet drivers.\n");
+			LOG_ERROR("2) Stop other tablet driver services.\n");
+			CleanupAndExit(1);
+		}
+
+		// Set screen mapper tablet
+		mapper->tablet = tablet;
+
+		// Start tablet handler
+		tabletHandler->tablet = tablet;
+		tabletHandler->Start();
+
+		// Set running state
+		running = true;
+
+
+		LOG_INFO("TabletDriver started!\n");
+		commandHandler->ExecuteCommand("Status");
+
+		return true;
+	}));
+
+	//
+	// Command: Echo
+	//
+	commandHandler->AddCommand(new Command("Echo", [&](CommandLine *cmd) {
+		if(cmd->valueCount > 0) {
+			LOG_INFO("%s\n", cmd->line.c_str() + 5);
+		} else {
+			LOG_INFO("\n");
+		}
+		return true;
+	}));
+
+
+	//
+	// Command: Exit
+	//
+	commandHandler->AddCommand(new Command("Exit", [&](CommandLine *cmd) {
+		LOG_INFO("Bye!\n");
+		CleanupAndExit(0);
+		return true;
+	}));
+
+
 	// Logger
 	//LOGGER_DIRECT = true;
 	LOGGER_START();
 
-	bool noVMulti = false;
-	for (size_t i = 0; i < argc; i++)
-	{
-		string s = argv[i];
-		if (s == "-r") {
-			noVMulti = true;
-		}
-	}
-
 	// VMulti Device
 	vmulti = new VMulti();
-	if(!vmulti->isOpen && !noVMulti) {
+	if(!vmulti->isOpen) {
 		LOG_ERROR("Can't open VMulti device!\n\n");
 		LOG_ERROR("Possible fixes:\n");
 		LOG_ERROR("1) Install VMulti driver\n");
@@ -354,10 +159,12 @@ int main(int argc, char**argv) {
 	if(argc > 1) {
 		filename = argv[1];
 	}
-	if(!ReadCommandFile(filename)) {
+	if(!commandHandler->ExecuteFile(filename)) {
 		LOG_ERROR("Can't open '%s'\n", filename.c_str());
 	}
 
+	// Create tablet handler
+	tabletHandler = new TabletHandler();
 
 	//
 	// Main loop that reads input from the console.
@@ -377,70 +184,16 @@ int main(int argc, char**argv) {
 		// Process valid lines
 		if(line.length() > 0) {
 			cmd = new CommandLine(line);
-
-
+			
 			//
-			// Start command
+			// Hide echo input 
 			//
-			if(cmd->is("start")) {
-				LOG_INFO(">> %s\n", cmd->line.c_str());
-
-				if(running) {
-					LOG_INFO("Driver is already started!\n");
-					continue;
-				}
-
-				// Unknown tablet
-				if(tablet == NULL) {
-					LOG_ERROR("Tablet not found!\n");
-					CleanupAndExit(1);
-				}
-
-				// Tablet init
-				if(!tablet->Init()) {
-					LOG_ERROR("Tablet init failed!\n");
-					LOG_ERROR("Possible fixes:\n");
-					LOG_ERROR("1) Uninstall other tablet drivers.\n");
-					LOG_ERROR("2) Stop other tablet driver services.\n");
-					CleanupAndExit(1);
-				}
-
-				// Set screen mapper tablet
-				mapper->tablet = tablet;
-
-				// Set running state
-				running = true;
-
-				// Timed filter timer
-				if(tablet->filterReportCount > 0) {
-					tablet->filterTimed[0]->callback = FilterTimerCallback;
-					tablet->filterTimed[0]->StartTimer();
-				}
-
-				// Start the tablet thread
-				tabletThread = new thread(RunTabletThread);
-
-				LOG_INFO("TabletDriver started!\n");
-				LogStatus();
-
-
-			//
-			// Echo
-			//
-			} else if(cmd->is("echo")) {
-				if(cmd->valueCount > 0) {
-					LOG_INFO("%s\n", cmd->line.c_str() + 5);
-				} else {
-					LOG_INFO("\n");
-				}
-
-
-			//
-			// Process all other commands
-			//
+			if(cmd->is("Echo")) {
+				commandHandler->ExecuteCommand(cmd);
 			} else {
 				ProcessCommand(cmd);
 			}
+
 			delete cmd;
 		}
 
@@ -463,16 +216,16 @@ void CleanupAndExit(int code) {
 		delete vmulti;
 		*/
 
-	// Delete filter timer
-	if(tablet != NULL) {
-		if(tablet->filterTimedCount != 0) {
-			tablet->filterTimed[0]->StopTimer();
-		}
+	// Stop filter timer
+	if(tabletHandler != NULL) {
+		tabletHandler->StopTimer();
 	}
 
+	// Reset output
 	if(outputManager != NULL) {
 		outputManager->Reset();
 	}
+
 	LOGGER_STOP();
 	Sleep(500);
 
