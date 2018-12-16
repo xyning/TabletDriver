@@ -35,7 +35,14 @@ namespace TabletDriverGUI
                 // Console timer
                 timerConsoleUpdate.Start();
 
-                driver.Start(config.DriverPath, config.DriverArguments);
+                string driverArguments = ConfigurationManager.Current.DriverArguments;
+                if (App.exp_no_vmulti)
+                {
+                    ConfigurationManager.Current.OutputMode = Configuration.OutputModes.SendInput;
+                    driverArguments += " -r";
+                }
+
+                driver.Start(ConfigurationManager.Current.DriverPath, driverArguments);
                 if (!driver.IsRunning)
                 {
                     SetStatus("Can't start the driver! Check the console!");
@@ -61,141 +68,6 @@ namespace TabletDriverGUI
             running = false;
             driver.Stop();
             timerConsoleUpdate.Stop();
-        }
-
-
-        //
-        // Send settings to the driver
-        //
-        private void SendSettingsToDriver()
-        {
-            if (!driver.IsRunning) return;
-
-            // Commands before settings
-            if (config.CommandsBefore.Length > 0)
-            {
-                foreach (string command in config.CommandsBefore)
-                {
-                    string tmp = command.Trim();
-                    if (tmp.Length > 0)
-                    {
-                        driver.SendCommand(tmp);
-                    }
-                }
-            }
-
-
-            // Desktop size
-            driver.SendCommand("DesktopSize " + textDesktopWidth.Text + " " + textDesktopHeight.Text);
-
-
-            // Screen area
-            driver.SendCommand("ScreenArea " +
-                Utils.GetNumberString(config.ScreenArea.Width) + " " + Utils.GetNumberString(config.ScreenArea.Height) + " " +
-                Utils.GetNumberString(config.ScreenArea.X) + " " + Utils.GetNumberString(config.ScreenArea.Y)
-            );
-
-
-            //
-            // Tablet area
-            //
-            // Inverted
-            if (config.Invert)
-            {
-                driver.SendCommand("TabletArea " +
-                    Utils.GetNumberString(config.TabletArea.Width) + " " +
-                    Utils.GetNumberString(config.TabletArea.Height) + " " +
-                    Utils.GetNumberString(config.TabletFullArea.Width - config.TabletArea.X) + " " +
-                    Utils.GetNumberString(config.TabletFullArea.Height - config.TabletArea.Y)
-                );
-                driver.SendCommand("Rotate " + Utils.GetNumberString(config.TabletArea.Rotation + 180));
-            }
-            // Normal
-            else
-            {
-                driver.SendCommand("TabletArea " +
-                    Utils.GetNumberString(config.TabletArea.Width) + " " +
-                    Utils.GetNumberString(config.TabletArea.Height) + " " +
-                    Utils.GetNumberString(config.TabletArea.X) + " " +
-                    Utils.GetNumberString(config.TabletArea.Y)
-                );
-                driver.SendCommand("Rotate " + Utils.GetNumberString(config.TabletArea.Rotation));
-            }
-
-
-            // Output Mode
-            switch (config.OutputMode)
-            {
-                case Configuration.OutputModes.Absolute:
-                    driver.SendCommand("Mode Absolute");
-                    break;
-                case Configuration.OutputModes.Relative:
-                    driver.SendCommand("Mode Relative");
-                    driver.SendCommand("RelativeSensitivity " + Utils.GetNumberString(config.ScreenArea.Width / config.TabletArea.Width));
-                    break;
-                case Configuration.OutputModes.Digitizer:
-                    driver.SendCommand("Mode Digitizer");
-                    break;
-            }
-
-
-            // Button map
-            if (config.DisableButtons)
-            {
-                driver.SendCommand("ButtonMap 0 0 0");
-            }
-            else
-            {
-                driver.SendCommand("ButtonMap " + String.Join(" ", config.ButtonMap));
-            }
-
-            // Smoothing filter
-            if (config.SmoothingEnabled)
-            {
-                driver.SendCommand("FilterTimerInterval " + Utils.GetNumberString(config.SmoothingInterval));
-                driver.SendCommand("Smoothing " + Utils.GetNumberString(config.SmoothingLatency));
-            }
-            else
-            {
-                driver.SendCommand("FilterTimerInterval 10");
-                driver.SendCommand("Smoothing 0");
-            }
-
-            // Noise filter
-            if (config.NoiseFilterEnabled)
-            {
-                driver.SendCommand("Noise " + Utils.GetNumberString(config.NoiseFilterBuffer) + " " + Utils.GetNumberString(config.NoiseFilterThreshold));
-            }
-            else
-            {
-                driver.SendCommand("Noise 0");
-            }
-
-
-            // Anti-smoothing filter
-            if (config.AntiSmoothingEnabled)
-            {
-                driver.SendCommand("AntiSmoothing " + Utils.GetNumberString(config.AntiSmoothingShape) + " " +
-                    Utils.GetNumberString(config.AntiSmoothingCompensation) + " " +
-                    (config.AntiSmoothingIgnoreWhenDragging ? "true" : "false"));
-            }
-            else
-            {
-                driver.SendCommand("AntiSmoothing 0");
-            }
-
-            // Commands after settings
-            if (config.CommandsAfter.Length > 0)
-            {
-                foreach (string command in config.CommandsAfter)
-                {
-                    string tmp = command.Trim();
-                    if (tmp.Length > 0)
-                    {
-                        driver.SendCommand(tmp);
-                    }
-                }
-            }
         }
 
 
@@ -242,18 +114,8 @@ namespace TabletDriverGUI
             //
             if (variableName == "tablet")
             {
-                string title = "TabletDriverGUI - " + parameters;
-                Title = title;
-
-                // Limit notify icon text length
-                if (title.Length > 63)
-                {
-                    notifyIcon.Text = title.Substring(0, 63);
-                }
-                else
-                {
-                    notifyIcon.Text = title;
-                }
+                TabletName = parameters;
+                UpdateTitle();
                 SetStatus("Connected to " + parameters);
             }
 
@@ -268,8 +130,8 @@ namespace TabletDriverGUI
                     config.TabletFullArea.X = val / 2.0;
                     LoadSettingsFromConfiguration();
                     UpdateSettingsToConfiguration();
-                    if (isFirstStart)
-                        SendSettingsToDriver();
+                    //if (config.isFirstStart)
+                    config.SendToDriver(driver);
                 }
             }
 
@@ -284,8 +146,8 @@ namespace TabletDriverGUI
                     config.TabletFullArea.Y = val / 2.0;
                     LoadSettingsFromConfiguration();
                     UpdateSettingsToConfiguration();
-                    if (isFirstStart)
-                        SendSettingsToDriver();
+                    //if (isFirstStart)
+                    config.SendToDriver(driver);
 
                 }
             }
@@ -364,7 +226,7 @@ namespace TabletDriverGUI
             }
             driver.SendCommand("Echo");
             driver.SendCommand("CheckTablet");
-            SendSettingsToDriver();
+            config.SendToDriver(driver);
             driver.SendCommand("Info");
             driver.SendCommand("Start");
             driver.SendCommand("Log Off");
@@ -413,7 +275,14 @@ namespace TabletDriverGUI
         {
             if (running)
             {
-                driver.Start(config.DriverPath, config.DriverArguments);
+                string driverArguments = ConfigurationManager.Current.DriverArguments;
+                if (App.exp_no_vmulti)
+                {
+                    ConfigurationManager.Current.OutputMode = Configuration.OutputModes.SendInput;
+                    driverArguments += " -r";
+                }
+
+                driver.Start(ConfigurationManager.Current.DriverPath, driverArguments);
             }
             timerRestart.Stop();
         }

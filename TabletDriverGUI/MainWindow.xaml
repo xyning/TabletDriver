@@ -37,7 +37,7 @@
             </MenuItem>
         </Menu>
 
-        <TabControl Name="tabControl" Margin="0,20,0,59"  Selector.IsSelected="True" Background="White" SelectionChanged="canvasLoaded" SelectedIndex="1">
+        <TabControl Name="tabControl" Margin="0,20,0,59"  Selector.IsSelected="True" Background="White" SelectionChanged="canvasLoaded" SelectedIndex="2">
             <TabItem Header="Profiles">
                 <Grid Margin="0,0,0.2,0">
                     <ListBox x:Name="profilesList" HorizontalAlignment="Left" Margin="10,41,0,34" Width="189" Loaded="profilesList_Loaded" SelectionChanged="profilesList_SelectionChanged"/>
@@ -604,12 +604,7 @@
                     VerticalScrollBarVisibility="Auto"
                     Keyboard.PreviewKeyDown="TextCommands_PreviewKeyDown"
                     TextChanged="TextChanged" />
-            <GroupBox.ToolTip>
-              <TextBlock>
-                 These commands are sent when the driver is started and settings have been applied to the driver.
-              </TextBlock>
-            </GroupBox.ToolTip>
-          </GroupBox>
+                    </GroupBox>
         </Grid>
       </TabItem>
       <TabItem Name="tabConsole" Header="Console">

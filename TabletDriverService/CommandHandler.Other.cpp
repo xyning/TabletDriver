@@ -584,4 +584,53 @@ void CommandHandler::CreateOtherCommands() {
 		return true;
 	}));
 
+
+	//
+	// Command: Extra
+	//
+	// Extra
+	//
+	AddCommand(new Command("Extra", [&](CommandLine *cmd) {
+		//TODO
+		int index = cmd->GetInt(0, 0);
+		string c = cmd->GetStringLower(1, "none");
+		Tablet::ExtraButtons *btn = &tablet->btn1;
+		switch (index) {
+		case 0: { btn = &tablet->btn1; break; }
+		case 1: { btn = &tablet->btn2; break; }
+		case 2: { btn = &tablet->btn3; break; }
+		default: break;
+		}
+		if (c == "none") {
+			*btn = Tablet::None;
+			LOG_INFO("NoneEx: %d\n", index);
+		}
+		if (c == "disabletablet") {
+			*btn = Tablet::DisableTablet;
+			LOG_INFO("DisableTabletEx: %d\n", index);
+		}
+		if (c == "mousewheel") {
+			*btn = Tablet::MouseWheel;
+			tablet->settings.mouseWheelSpeed[index] = cmd->GetInt(2, 20);
+			LOG_INFO("MouseWheelEx: %d, Speed: %d\n", index, tablet->settings.mouseWheelSpeed[index]);
+		}
+		if (c == "keyboard") {
+			*btn = Tablet::Keyboard;
+			for (int i = 2; i <= 9; i++) {
+				tablet->settings.keyboardKeyCodes[index][i - 2] = cmd->GetInt(i, 0);
+			}
+			LOG_INFO("Keyboard: %d, Keys: %d, %d, %d, %d, %d, %d, %d, %d\n", index,
+				tablet->settings.keyboardKeyCodes[index][0],
+				tablet->settings.keyboardKeyCodes[index][1],
+				tablet->settings.keyboardKeyCodes[index][2],
+				tablet->settings.keyboardKeyCodes[index][3],
+				tablet->settings.keyboardKeyCodes[index][4],
+				tablet->settings.keyboardKeyCodes[index][5],
+				tablet->settings.keyboardKeyCodes[index][6],
+				tablet->settings.keyboardKeyCodes[index][7]
+			);
+		}
+		return true;
+	}));
+
 }

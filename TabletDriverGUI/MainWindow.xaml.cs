@@ -35,9 +35,9 @@ namespace TabletDriverGUI
         public bool IsRealExit;
 
         // Driver
-        private TabletDriver driver;
+        public static TabletDriver driver;
         private Dictionary<String, String> driverCommands;
-        private bool running;
+        public static bool running;
 
 
         // Timers
@@ -79,6 +79,8 @@ namespace TabletDriverGUI
 
         // Measurement to area
         private bool isEnabledMeasurementToArea = false;
+
+        public static Configuration config => ConfigurationManager.Current;
 
         //
         // Constructor
@@ -594,6 +596,32 @@ namespace TabletDriverGUI
             }
         }
 
+        private int windowState = 0;
+        private void WindowMenuClick(object sender, RoutedEventArgs e)
+        {
+            if (sender == windowMenuSmall)
+            {
+                viewport.LayoutTransform = new ScaleTransform(.8, .8);
+                window.Width = 620 * .8;
+                window.Height = 485 * .8;
+                windowState = 1;
+            }
+            else if (sender == windowMenuLarge)
+            {
+                viewport.LayoutTransform = new ScaleTransform(1.2, 1.2);
+                window.Width = 620 * 1.2;
+                window.Height = 485 * 1.2;
+                windowState = 2;
+            }
+            else if (sender == windowMenuDefault)
+            {
+                viewport.LayoutTransform = new ScaleTransform(1, 1);
+                window.Width = 620;
+                window.Height = 485;
+                windowState = 0;
+            }
+        }
+
         #region profile
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -726,7 +754,7 @@ namespace TabletDriverGUI
             if (saveFileDialog.ShowDialog() == true)
             {
                 Configuration c = new Configuration();
-                System.Drawing.Rectangle r = MainWindow.GetVirtualDesktopSize();
+                System.Drawing.Rectangle r = GetVirtualDesktopSize();
                 c.DesktopWidth = r.Width;
                 c.DesktopHeight = r.Height;
                 c.DesktopSize.Width = r.Width;
@@ -749,6 +777,23 @@ namespace TabletDriverGUI
         }
 
         #endregion
+
+        string TabletName;
+        private void UpdateTitle()
+        {
+            string title = "TabletDriverGUI - " + TabletName + " - " + ConfigurationManager.Current.ConfigFilename;
+            Title = title;
+
+            // Limit notify icon text length
+            if (title.Length > 63)
+            {
+                notifyIcon.Text = title.Substring(0, 63);
+            }
+            else
+            {
+                notifyIcon.Text = title;
+            }
+        }
 
     }
 }
