@@ -1,4 +1,4 @@
-12/05/18 updated to hawku/TabletDriver v0.2. **still not properly tested**  
+12/16/18 updated to hawku/TabletDriver v0.2.1. **still not properly tested**  
 
 ---
 add many many more bugs and a little useful features on hawku/TabletDriver  
