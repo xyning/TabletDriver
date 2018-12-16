@@ -90,7 +90,7 @@ void TabletHandler::ChangeTimerInterval(int newInterval) {
 
 	double oldInterval = timerInterval;
 	timerInterval = newInterval;
-	
+
 	// Tell the new interval to timed filters
 	if(tablet != NULL) {
 		for(int i = 0; i < tablet->filterTimedCount; i++) {
@@ -111,17 +111,16 @@ void TabletHandler::RunTabletInputThread() {
 	bool isFirstReport = true;
 	bool isResent = false;
 	TabletFilter *filter;
+	TabletState filterState;
 	bool filterTimedEnabled;
-	TabletState outputState;
 
-	chrono::high_resolution_clock::time_point timeBegin = chrono::high_resolution_clock::now();
+	timeBegin = chrono::high_resolution_clock::now();
 
 	isRunning = true;
 
 	//
-	// Main Loop
+	// Tablet input main loop
 	//
-
 	while(isRunning) {
 
 		//
@@ -132,30 +131,37 @@ void TabletHandler::RunTabletInputThread() {
 		// Position OK
 		if(status == Tablet::ReportValid) {
 			isResent = false;
+		}
 
 		// Invalid report id
-		} else if(status == Tablet::ReportInvalid) {
+		else if(status == Tablet::ReportInvalid) {
 			tablet->state.isValid = false;
 			continue;
+		}
 
 		// Valid report but position is not in-range or invalid
-		} else if(status == Tablet::ReportPositionInvalid) {
+		else if(status == Tablet::ReportPositionInvalid) {
 			if(!isResent && tablet->state.isValid) {
 				isResent = true;
 				tablet->state.isValid = false;
-			} else {
+				outputState.isValid = false;
+			}
+			else {
 				continue;
 			}
+		}
 
 		// Ignore report
-		} else if(status == Tablet::ReportIgnore) {
+		else if(status == Tablet::ReportIgnore) {
 			continue;
+		}
 
 		// Reading failed
-		} else {
+		else {
 			LOG_ERROR("Tablet Read Error!\n");
 			CleanupAndExit(1);
 		}
+
 
 		//
 		// Don't send the first report
@@ -168,12 +174,13 @@ void TabletHandler::RunTabletInputThread() {
 		// Debug messages
 		if(logger.debugEnabled) {
 			double delta = (tablet->state.time - timeBegin).count() / 1000000.0;
-			LOG_DEBUG("TabletState: T=%0.3f, B=%d, X=%0.3f, Y=%0.3f, P=%0.3f\n",
+			LOG_DEBUG("InputState: T=%0.3f, B=%d, X=%0.3f, Y=%0.3f, P=%0.3f V=%s\n",
 				delta,
 				tablet->state.buttons,
 				tablet->state.position.x,
 				tablet->state.position.y,
-				tablet->state.pressure
+				tablet->state.pressure,
+				tablet->state.isValid ? "True" : "False"
 			);
 		}
 
@@ -183,15 +190,15 @@ void TabletHandler::RunTabletInputThread() {
 			tablet->state.buttons = 0;
 		}
 
-		// Copy input state values to ouput state
-		memcpy(&outputState, &tablet->state, sizeof(outputState));
-
-
 		//
 		// Report filters
 		//
 		// Is there any filters?
 		if(tablet->filterReportCount > 0) {
+
+			// Copy input state values to filter state
+			memcpy(&filterState, &tablet->state, sizeof(TabletState));
+
 
 			// Loop through filters
 			for(int filterIndex = 0; filterIndex < tablet->filterReportCount; filterIndex++) {
@@ -203,12 +210,26 @@ void TabletHandler::RunTabletInputThread() {
 				if(filter != NULL && filter->isEnabled) {
 
 					// Process
-					filter->SetTarget(&outputState);
+					filter->SetTarget(&filterState);
 					filter->Update();
-					filter->GetOutput(&outputState);
+					filter->GetOutput(&filterState);
 				}
 
 			}
+
+			lock.lock();
+			memcpy(&outputState, &filterState, sizeof(TabletState));
+			lock.unlock();
+		}
+
+		// No filters
+		else {
+
+			// Copy input state values to output state
+			lock.lock();
+			memcpy(&outputState, &tablet->state, sizeof(TabletState));
+			lock.unlock();
+
 		}
 
 
@@ -282,6 +303,7 @@ void TabletHandler::RunTabletInputThread() {
 			key2Pressed = false;
 		}
 
+
 		// Do not write report when timed filter is enabled
 		if(filterTimedEnabled) {
 			continue;
@@ -291,8 +313,8 @@ void TabletHandler::RunTabletInputThread() {
 			continue;
 		}
 
-		outputManager->Set(&outputState);
-		outputManager->Write();
+		// Write output state
+		WriteOutputState(&outputState);
 	}
 
 	isRunning = false;
@@ -304,21 +326,19 @@ void TabletHandler::RunTabletInputThread() {
 //
 void TabletHandler::OnTimerTick() {
 	if(tablet == NULL) return;
-
-	Vector2D position;
 	TabletFilter *filter;
-	TabletState outputState;
-	bool filterEnabled = false;
+	TabletState filterState;
+	bool filtersEnabled = false;
+
+	// Copy current input state values
+	lock.lock();
+	memcpy(&filterState, &outputState, sizeof(TabletState));
+	lock.unlock();
 
 	// Set position
-	if(tablet->state.isValid) {
-		position.Set(tablet->state.position);
-	} else {
+	if(!filterState.isValid) {
 		return;
 	}
-
-	// Copy input state values to ouput state
-	memcpy(&outputState, &tablet->state, sizeof(TabletState));
 
 	// Loop through filters
 	for(int filterIndex = 0; filterIndex < tablet->filterTimedCount; filterIndex++) {
@@ -328,19 +348,20 @@ void TabletHandler::OnTimerTick() {
 
 		// Filter enabled?
 		if(filter->isEnabled) {
-			filterEnabled = true;
-		} else {
+			filtersEnabled = true;
+		}
+		else {
 			continue;
 		}
 
 		// Set filter targets
-		filter->SetTarget(&outputState);
+		filter->SetTarget(&filterState);
 
 		// Update filter position
 		filter->Update();
 
 		// Set output vector
-		filter->GetOutput(&outputState);
+		filter->GetOutput(&filterState);
 
 	}
 
@@ -348,11 +369,38 @@ void TabletHandler::OnTimerTick() {
 		return;
 	}
 
-	if(!filterEnabled) {
+	// Do not write to output if no filters are enabled
+	if(!filtersEnabled) {
 		return;
 	}
 
-	outputManager->Set(&outputState);
-	outputManager->Write();
+	// Write output state
+	WriteOutputState(&filterState);
+
+}
+
+//
+// Write output state with output manager
+//
+void TabletHandler::WriteOutputState(TabletState * outputState)
+{
+	bool result;
+	result = outputManager->Set(outputState);
+	if(result) {
+		result = outputManager->Write();
+	}
+
+	// Debug message
+	if(result && logger.debugEnabled) {
+		double delta = (chrono::high_resolution_clock::now() - timeBegin).count() / 1000000.0;
+		LOG_DEBUG("OutputState: T=%0.3f, B=%d, X=%0.3f, Y=%0.3f, P=%0.3f V=%s\n",
+			delta,
+			outputState->buttons,
+			outputState->position.x,
+			outputState->position.y,
+			outputState->pressure,
+			outputState->isValid ? "True" : "False"
+		);
+	}
 
 }

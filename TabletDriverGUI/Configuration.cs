@@ -105,6 +105,7 @@ namespace TabletDriverGUI
         public int WindowWidth = 800;
         public int WindowHeight = 710;
 
+        public bool AutomaticRestart = true;
         public bool RunAtStartup = false;
 
         public string DriverPath = "bin/TabletDriverService.exe";

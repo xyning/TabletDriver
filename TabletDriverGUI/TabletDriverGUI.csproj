@@ -116,6 +116,9 @@
     <Compile Include="ExtraButtonConfig\MouseWheel.xaml.cs">
       <DependentUpon>MouseWheel.xaml</DependentUpon>
     </Compile>
+    <Compile Include="MainWindow.Driver.cs" />
+    <Compile Include="MainWindow.Console.cs" />
+    <Compile Include="MainWindow.Settings.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="TabletDriver.cs" />
     <Compile Include="NativeMethods.cs" />
