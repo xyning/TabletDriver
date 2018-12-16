@@ -236,6 +236,11 @@ namespace TabletDriverGUI
                 }
                 textCommandsAfter.Text = tmp;
 
+            //
+            // Debugging
+            //
+            checkBoxDebugging.IsChecked = config.DebuggingEnabled;
+
 
                 // Update canvases
                 UpdateCanvasElements();
@@ -430,6 +435,11 @@ namespace TabletDriverGUI
                     commandList.Add(command.Trim());
             config.CommandsAfter = commandList.ToArray();
 
+
+            //
+            // Debugging
+            //
+            config.DebuggingEnabled = (bool)checkBoxDebugging.IsChecked;
 
 
             UpdateCanvasElements();
@@ -966,7 +976,6 @@ namespace TabletDriverGUI
         {
             if (isLoadingSettings) return;
 
-
             // Disable tablet area settings when full area is forced
             if (checkBoxForceFullArea.IsChecked == true)
             {
@@ -1016,6 +1025,19 @@ namespace TabletDriverGUI
             {
                 textDesktopWidth.IsEnabled = true;
                 textDesktopHeight.IsEnabled = true;
+            }
+
+            // Debugging checkbox
+            if (sender == checkBoxDebugging)
+            {
+                if (checkBoxDebugging.IsChecked == true)
+                {
+                    driver.SendCommand("Debug true");
+                }
+                else
+                {
+                    driver.SendCommand("Debug false");
+                }
             }
 
             UpdateSettingsToConfiguration();
@@ -1102,6 +1124,21 @@ namespace TabletDriverGUI
                 comboBoxMonitor.Items.Add(System.Windows.Forms.Screen.PrimaryScreen.DeviceName);
             }
 
+            // TabletDriverGUI window
+            comboBoxMonitor.Items.Add("This window");
+
+            // osu!.exe processes window
+            try
+            {
+                if (Process.GetProcessesByName("osu!").Length > 0)
+                {
+                    comboBoxMonitor.Items.Add("osu! window");
+                }
+            }
+            catch (Exception)
+            {
+            }
+
         }
 
         // Monitor selected -> change screen map
@@ -1127,12 +1164,48 @@ namespace TabletDriverGUI
             else if (index > 0)
             {
                 index--;
+
+                // Monitors
                 if (index >= 0 && index < screens.Length)
                 {
                     textScreenAreaX.Text = Utils.GetNumberString(screens[index].Bounds.X - minX);
                     textScreenAreaY.Text = Utils.GetNumberString(screens[index].Bounds.Y - minY);
                     textScreenAreaWidth.Text = Utils.GetNumberString(screens[index].Bounds.Width);
                     textScreenAreaHeight.Text = Utils.GetNumberString(screens[index].Bounds.Height);
+                }
+
+                // TabletDriverGUI window
+                else if (comboBoxMonitor.SelectedValue.ToString() == "This window")
+                {
+                    textScreenAreaX.Text = Utils.GetNumberString(Application.Current.MainWindow.Left - minX);
+                    textScreenAreaY.Text = Utils.GetNumberString(Application.Current.MainWindow.Top - minY);
+                    textScreenAreaWidth.Text = Utils.GetNumberString(Application.Current.MainWindow.Width);
+                    textScreenAreaHeight.Text = Utils.GetNumberString(Application.Current.MainWindow.Height);
+                }
+
+                // osu! window
+                else if (comboBoxMonitor.SelectedValue.ToString() == "osu! window")
+                {
+                    try
+                    {
+                        Process[] processes = Process.GetProcessesByName("osu!");
+
+                        if (processes.Length > 0)
+                        {
+                            IntPtr osuHandle = processes[0].MainWindowHandle;
+                            NativeMethods.GetWindowRect(osuHandle, out NativeMethods.RECT rect);
+
+                            textScreenAreaX.Text = Utils.GetNumberString(rect.X - minX);
+                            textScreenAreaY.Text = Utils.GetNumberString(rect.Y - minY);
+                            textScreenAreaWidth.Text = Utils.GetNumberString(rect.Width);
+                            textScreenAreaHeight.Text = Utils.GetNumberString(rect.Height - 1);
+
+                        }
+                    }
+                    catch (Exception)
+                    {
+
+                    }
                 }
             }
             UpdateSettingsToConfiguration();

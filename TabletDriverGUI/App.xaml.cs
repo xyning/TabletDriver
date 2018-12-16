@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -54,38 +55,72 @@ namespace TabletDriverGUI
                 }
 
                 //
-                // Check Wacom processes
+                // Other tablet driver processes
                 //
-                string[] wacomProcessNames =
+                string[] tabletDriverProcessNames =
                 {
+
+                    // Wacom
                     "Pen_Tablet",
-                    "Wacom_Tablet"
+                    "Wacom_Tablet",
+
+                    // XP-Pen
+                    "PentabletService",
+                    "Pentablet",
+
+                    // VEIKK
+                    "TabletDriverCenter",
+                    "TabletDriverSetting",
+
+                    // Huion
+                    "Huion Tablet"
+
                 };
 
+
+                //
+                // Find driver processes
+                //
                 processes = Process.GetProcesses();
+                List<Process> foundProcesses = new List<Process>();
                 foreach (Process process in processes)
                 {
-                    foreach (string wacomProcessName in wacomProcessNames)
+                    foreach (string processName in tabletDriverProcessNames)
                     {
-                        if (process.ProcessName.ToLower() == wacomProcessName.ToLower())
+                        if (process.ProcessName.ToLower() == processName.ToLower())
                         {
-                            try
-                            {
-                                process.Kill();
-                            }
-                            catch (Exception)
-                            {
-                                MessageBox.Show(
-                                    "You have Wacom driver processes running in the background:\n  " +
-                                    string.Join("\n  ", wacomProcessNames) +
-                                    "\n\nPlease shutdown those before starting the GUI!",
-                                    "Error!", MessageBoxButton.OK, MessageBoxImage.Error
-                                );
-                                instanceMutex.ReleaseMutex();
-                                Shutdown();
-                                return;
-                            }
+                            foundProcesses.Add(process);
                         }
+                    }
+                }
+
+                //
+                // Try to kill driver processes
+                //
+                foreach (Process process in foundProcesses)
+                {
+                    try
+                    {
+                        process.Kill();
+                        Thread.Sleep(100);
+                    }
+                    catch (Exception)
+                    {
+                        string processNames = "";
+                        foreach (Process p in foundProcesses)
+                        {
+                            processNames += "- " + p.ProcessName + ".exe\n  ";
+                        }
+
+                        MessageBox.Show(
+                            "You have other driver processes running:\n  " +
+                            processNames +
+                            "\nPlease shutdown those before starting this driver!",
+                            "TabletDriverGUI - Error!", MessageBoxButton.OK, MessageBoxImage.Error
+                        );
+                        instanceMutex.ReleaseMutex();
+                        Shutdown();
+                        return;
                     }
                 }
 

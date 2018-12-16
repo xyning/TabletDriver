@@ -114,6 +114,8 @@ namespace TabletDriverGUI
         public bool DeveloperMode = false;
         public static string DefaultConfigFilename = "config/config.xml";
         public string ConfigFilename = DefaultConfigFilename;
+        public bool DebuggingEnabled = false;
+        public bool DeveloperMode;
 
         public override string ToString()
         {
