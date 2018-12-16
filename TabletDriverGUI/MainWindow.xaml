@@ -605,11 +605,11 @@
                     Keyboard.PreviewKeyDown="TextCommands_PreviewKeyDown"
                     TextChanged="TextChanged" />
                     </GroupBox>
-        </Grid>
-      </TabItem>
-      <TabItem Name="tabConsole" Header="Console">
-        <Grid Margin="0,2,0,0">
-          <ScrollViewer Name="scrollConsole" Margin="5,5,5,30"
+                </Grid>
+            </TabItem>
+            <TabItem Name="tabConsole" Header="Console">
+                <Grid Margin="0,2,0,0">
+                    <ScrollViewer Name="scrollConsole" Margin="5,5,5,30"
                         VerticalScrollBarVisibility="Auto"
                         HorizontalScrollBarVisibility="Auto">
 
@@ -621,40 +621,44 @@
                      >
               
               <!-- Console Context Menu -->
-              <TextBlock.ContextMenu>
-                <ContextMenu>
-                  <MenuItem Name="menuCopyAll" Header="Copy all" Click="ConsoleMenuClick"></MenuItem>
-                  <MenuItem Name="menuCopyDebug" Header="Copy [DEBUG] messages" Click="ConsoleMenuClick"></MenuItem>
-                  <MenuItem Name="menuCopyErrors" Header="Copy [ERROR] messages" Click="ConsoleMenuClick"></MenuItem>
-                  <Separator/>
-                  <MenuItem Name="menuStartDebug" Header="Start debugging" Click="ConsoleMenuClick"></MenuItem>
-                  <MenuItem Name="menuStopDebug" Header="Stop debugging" Click="ConsoleMenuClick"></MenuItem>
-                  <MenuItem Name="menuFindLatestDebugLog" Header="Find latest debug log" Click="ConsoleMenuClick"></MenuItem>
-                  <Separator/>
-                  <MenuItem Name="menuFindStartupLog" Header="Find startuplog.txt" Click="ConsoleMenuClick"></MenuItem>
-                  <MenuItem Name="menuOpenFolder" Header="Open TabletDriver folder" Click="ConsoleMenuClick"></MenuItem>
-                  <Separator/>
-                  <MenuItem Name="menuRunBenchmark" Header="Run benchmark" Click="ConsoleMenuClick"></MenuItem>
-                  <MenuItem Name="menuCopyBenchmark" Header="Copy benchmark result" Click="ConsoleMenuClick"></MenuItem>
-                  <MenuItem Name="menuMeasure2" Header="Measure 2 points" Click="ConsoleMenuClick"></MenuItem>
-                  <Separator/>
-                  <MenuItem Name="menuOpenGithub" Header="Open GitHub page" Click="ConsoleMenuClick"></MenuItem>
-                  <MenuItem Name="menuOpenLatestURL" Header="Open latest URL" Click="ConsoleMenuClick"></MenuItem>
-                  <MenuItem Name="menuReportProblem" Header="Report a problem" Click="ConsoleMenuClick"></MenuItem>
-                </ContextMenu>
-              </TextBlock.ContextMenu>
-            </TextBlock>
-          </ScrollViewer>
+                            <TextBlock.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Name="menuCopyAll" Header="Copy all" Click="ConsoleMenuClick"></MenuItem>
+                                    <MenuItem Name="menuCopyDebug" Header="Copy [DEBUG] messages" Click="ConsoleMenuClick"></MenuItem>
+                                    <MenuItem Name="menuCopyErrors" Header="Copy [ERROR] messages" Click="ConsoleMenuClick"></MenuItem>
+                                    <Separator/>
+                                    <MenuItem Name="menuStartDebug" Header="Start debugging" Click="ConsoleMenuClick"></MenuItem>
+                                    <MenuItem Name="menuStopDebug" Header="Stop debugging" Click="ConsoleMenuClick"></MenuItem>
+                                    <MenuItem Name="menuFindLatestDebugLog" Header="Find latest debug log" Click="ConsoleMenuClick"></MenuItem>
+                                    <Separator/>
+                                    <MenuItem Name="menuFindStartupLog" Header="Find startuplog.txt" Click="ConsoleMenuClick"></MenuItem>
+                                    <MenuItem Name="menuOpenFolder" Header="Open TabletDriver folder" Click="ConsoleMenuClick"></MenuItem>
+                                    <Separator/>
+                                    <MenuItem Name="menuRunBenchmark" Header="Run benchmark" Click="ConsoleMenuClick"></MenuItem>
+                                    <MenuItem Name="menuCopyBenchmark" Header="Copy benchmark result" Click="ConsoleMenuClick"></MenuItem>
+                                    <MenuItem Name="menuMeasure2" Header="Measure 2 points" Click="ConsoleMenuClick"></MenuItem>
+                                    <Separator/>
+                                    <MenuItem Name="menuOpenGithub" Header="Open GitHub page" Click="ConsoleMenuClick"></MenuItem>
+                                    <MenuItem Name="menuOpenLatestURL" Header="Open latest URL" Click="ConsoleMenuClick"></MenuItem>
+                                    <MenuItem Name="menuReportProblem" Header="Report a problem" Click="ConsoleMenuClick"></MenuItem>
+                                </ContextMenu>
+                            </TextBlock.ContextMenu>
+                        </TextBlock>
+                    </ScrollViewer>
 
                     <!-- Console input -->
-                    <TextBox x:Name="textConsoleInput" Margin="5,0,5,5" VerticalAlignment="Bottom"  Height="20" TextWrapping="Wrap" Text=""
+                    <TextBox x:Name="textConsoleInput" Margin="5,0,72.2,5" VerticalAlignment="Bottom"  Height="20" TextWrapping="Wrap" Text=""
                    FontFamily="Courier New" Background="White" Foreground="Black"
                    FontSize="12"
                    TabIndex="2"
                    PreviewKeyDown="TextConsoleInput_PreviewKeyDown"
-                   KeyDown="TextConsoleInput_KeyDown" Grid.ColumnSpan="2"
+                   KeyDown="TextConsoleInput_KeyDown"
              />
-
+                    <CheckBox Name="checkBoxDebugging"
+                      Margin="540,321,5.2,5"
+                      Checked="CheckboxChanged"
+                      Unchecked="CheckboxChanged" VerticalContentAlignment="Center"
+            >Debug</CheckBox>
                 </Grid>
             </TabItem>
         </TabControl>
@@ -675,19 +679,19 @@
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
 
-        <!-- Restart Driver -->
-        <Button Name="buttonRestartDriver" Margin="5,5,5,5" Padding="5,0,5,0"
+                <!-- Restart Driver -->
+                <Button Name="buttonRestartDriver" Margin="5,5,5,5" Padding="5,0,5,0"
               Click="RestartDriverClick"
                 ToolTip="Restarts the TabletDriverService">Restart Driver</Button>
 
-        <!-- Automatic restart -->
-        <CheckBox Name="checkBoxAutomaticRestart" Margin="5,5,5,5" 
+                <!-- Automatic restart -->
+                <CheckBox Name="checkBoxAutomaticRestart" Margin="5,5,5,5" 
                 VerticalAlignment="Center" VerticalContentAlignment="Center"
                 Checked="CheckboxChanged" Unchecked="CheckboxChanged"
                 ToolTip="Automatically restarts the driver when it shuts down.">Auto Restart</CheckBox>
 
-        <!-- Run at Startup -->
-        <CheckBox Name="checkBoxRunAtStartup"
+                <!-- Run at Startup -->
+                <CheckBox Name="checkBoxRunAtStartup"
                 VerticalAlignment="Center" VerticalContentAlignment="Center"
                 Checked="CheckboxChanged" Unchecked="CheckboxChanged"
                 ToolTip="Starts and hides the TabletDriverGUI at Windows startup">Run at Windows startup</CheckBox>
