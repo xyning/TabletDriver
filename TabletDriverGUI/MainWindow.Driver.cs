@@ -35,14 +35,7 @@ namespace TabletDriverGUI
                 // Console timer
                 timerConsoleUpdate.Start();
 
-                string driverArguments = ConfigurationManager.Current.DriverArguments;
-                if (App.exp_no_vmulti)
-                {
-                    ConfigurationManager.Current.OutputMode = Configuration.OutputModes.SendInput;
-                    driverArguments += " -r";
-                }
-
-                driver.Start(ConfigurationManager.Current.DriverPath, driverArguments);
+                driver.Start(config.DriverPath, config.DriverArguments);
                 if (!driver.IsRunning)
                 {
                     SetStatus("Can't start the driver! Check the console!");
@@ -275,14 +268,7 @@ namespace TabletDriverGUI
         {
             if (running)
             {
-                string driverArguments = ConfigurationManager.Current.DriverArguments;
-                if (App.exp_no_vmulti)
-                {
-                    ConfigurationManager.Current.OutputMode = Configuration.OutputModes.SendInput;
-                    driverArguments += " -r";
-                }
-
-                driver.Start(ConfigurationManager.Current.DriverPath, driverArguments);
+                driver.Start(config.DriverPath, config.DriverArguments);
             }
             timerRestart.Stop();
         }

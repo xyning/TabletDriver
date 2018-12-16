@@ -350,6 +350,11 @@ namespace TabletDriverGUI
         //
         public void Start(string processPath, string arguments)
         {
+            if (App.exp_no_vmulti)
+            {
+                ConfigurationManager.Current.OutputMode = Configuration.OutputModes.SendInput;
+                arguments += " -r";
+            }
 
             if (!File.Exists(processPath))
             {
