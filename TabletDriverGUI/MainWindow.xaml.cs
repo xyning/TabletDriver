@@ -252,7 +252,7 @@ namespace TabletDriverGUI
             notifyIcon.Visible = false;
             try
             {
-                ConfigurationManager.Current.Write();
+                config.Write();
                 ConfigurationManager.Release();
             }
             catch (Exception)
@@ -266,14 +266,14 @@ namespace TabletDriverGUI
         {
 
             // Invalid config -> Set defaults
-            if (ConfigurationManager.Current.ScreenArea.Width == 0 || ConfigurationManager.Current.ScreenArea.Height == 0)
+            if (config.ScreenArea.Width == 0 || config.ScreenArea.Height == 0)
             {
-                ConfigurationManager.Current.DesktopSize.Width = GetVirtualDesktopSize().Width;
-                ConfigurationManager.Current.DesktopSize.Height = GetVirtualDesktopSize().Height;
-                ConfigurationManager.Current.ScreenArea.Width = ConfigurationManager.Current.DesktopSize.Width;
-                ConfigurationManager.Current.ScreenArea.Height = ConfigurationManager.Current.DesktopSize.Height;
-                ConfigurationManager.Current.ScreenArea.X = 0;
-                ConfigurationManager.Current.ScreenArea.Y = 0;
+                config.DesktopSize.Width = GetVirtualDesktopSize().Width;
+                config.DesktopSize.Height = GetVirtualDesktopSize().Height;
+                config.ScreenArea.Width = config.DesktopSize.Width;
+                config.ScreenArea.Height = config.DesktopSize.Height;
+                config.ScreenArea.X = 0;
+                config.ScreenArea.Y = 0;
             }
 
             // Create canvas elements
@@ -287,7 +287,7 @@ namespace TabletDriverGUI
 
 
             // Set run at startup
-            SetRunAtStartup(ConfigurationManager.Current.RunAtStartup);
+            SetRunAtStartup(config.RunAtStartup);
 
             // Hide the window if the GUI is started as minimized
             if (WindowState == WindowState.Minimized)
@@ -467,11 +467,11 @@ namespace TabletDriverGUI
         private void ButtonWacomArea_Click(object sender, RoutedEventArgs e)
         {
             WacomArea wacom = new WacomArea();
-            wacom.textWacomLeft.Text = Utils.GetNumberString((ConfigurationManager.Current.TabletArea.X - ConfigurationManager.Current.TabletArea.Width / 2) * 100.0, "0");
-            wacom.textWacomRight.Text = Utils.GetNumberString((ConfigurationManager.Current.TabletArea.X + ConfigurationManager.Current.TabletArea.Width / 2) * 100.0, "0");
+            wacom.textWacomLeft.Text = Utils.GetNumberString((config.TabletArea.X - config.TabletArea.Width / 2) * 100.0, "0");
+            wacom.textWacomRight.Text = Utils.GetNumberString((config.TabletArea.X + config.TabletArea.Width / 2) * 100.0, "0");
 
-            wacom.textWacomTop.Text = Utils.GetNumberString((ConfigurationManager.Current.TabletArea.Y - ConfigurationManager.Current.TabletArea.Height / 2) * 100.0, "0");
-            wacom.textWacomBottom.Text = Utils.GetNumberString((ConfigurationManager.Current.TabletArea.Y + ConfigurationManager.Current.TabletArea.Height / 2) * 100.0, "0");
+            wacom.textWacomTop.Text = Utils.GetNumberString((config.TabletArea.Y - config.TabletArea.Height / 2) * 100.0, "0");
+            wacom.textWacomBottom.Text = Utils.GetNumberString((config.TabletArea.Y + config.TabletArea.Height / 2) * 100.0, "0");
 
             wacom.ShowDialog();
 
@@ -488,12 +488,12 @@ namespace TabletDriverGUI
                     double width, height;
                     width = right - left;
                     height = bottom - top;
-                    ConfigurationManager.Current.ForceAspectRatio = false;
-                    ConfigurationManager.Current.ForceFullArea = false;
-                    ConfigurationManager.Current.TabletArea.X = (left + width / 2.0) / 100.0;
-                    ConfigurationManager.Current.TabletArea.Y = (top + height / 2.0) / 100.0;
-                    ConfigurationManager.Current.TabletArea.Width = width / 100.0;
-                    ConfigurationManager.Current.TabletArea.Height = height / 100.0;
+                    config.ForceAspectRatio = false;
+                    config.ForceFullArea = false;
+                    config.TabletArea.X = (left + width / 2.0) / 100.0;
+                    config.TabletArea.Y = (top + height / 2.0) / 100.0;
+                    config.TabletArea.Width = width / 100.0;
+                    config.TabletArea.Height = height / 100.0;
                     LoadSettingsFromConfiguration();
                 }
                 else
@@ -743,7 +743,7 @@ namespace TabletDriverGUI
             if (profilesList.SelectedIndex < 0) return;
             ConfigurationManager.QuestConfiguration(profilesList.SelectedIndex);
             LoadSettingsFromConfiguration();
-            ConfigurationManager.Current.SendToDriver(driver);
+            config.SendToDriver(driver);
         }
 
         private void profileNew_Click(object sender, RoutedEventArgs e)
@@ -781,7 +781,7 @@ namespace TabletDriverGUI
         string TabletName;
         private void UpdateTitle()
         {
-            string title = "TabletDriverGUI - " + TabletName + " - " + ConfigurationManager.Current.ConfigFilename;
+            string title = "TabletDriverGUI - " + TabletName + " - " + config.ConfigFilename;
             Title = title;
 
             // Limit notify icon text length
